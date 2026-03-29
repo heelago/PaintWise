@@ -139,10 +139,43 @@ function extractJson(text) {
 
   // Try to find JSON object in the text
   const braceStart = text.indexOf('{');
+  if (braceStart < 0) return null;
+
   const braceEnd = text.lastIndexOf('}');
-  if (braceStart >= 0 && braceEnd > braceStart) {
+  if (braceEnd > braceStart) {
     try { return JSON.parse(text.slice(braceStart, braceEnd + 1)); } catch { /* continue */ }
   }
+
+  // Truncated JSON repair: close open brackets and braces
+  let jsonStr = text.slice(braceStart);
+  // Remove any trailing partial string (cut mid-value)
+  jsonStr = jsonStr.replace(/,\s*"[^"]*$/, '');       // trailing key without value
+  jsonStr = jsonStr.replace(/,\s*$/, '');              // trailing comma
+  jsonStr = jsonStr.replace(/:\s*"[^"]*$/, ': ""');    // cut mid-string value
+
+  // Count and close unclosed brackets
+  let openBraces = 0, openBrackets = 0;
+  let inString = false, escaped = false;
+  for (const ch of jsonStr) {
+    if (escaped) { escaped = false; continue; }
+    if (ch === '\\') { escaped = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{') openBraces++;
+    if (ch === '}') openBraces--;
+    if (ch === '[') openBrackets++;
+    if (ch === ']') openBrackets--;
+  }
+
+  // Close everything
+  for (let i = 0; i < openBrackets; i++) jsonStr += ']';
+  for (let i = 0; i < openBraces; i++) jsonStr += '}';
+
+  try {
+    const result = JSON.parse(jsonStr);
+    console.warn('[PaintWise] Repaired truncated JSON successfully');
+    return result;
+  } catch { /* continue */ }
 
   return null;
 }
@@ -194,7 +227,7 @@ export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, opti
     }],
     generationConfig: {
       temperature: 0.3,
-      maxOutputTokens: 16384,
+      maxOutputTokens: 65536,
     },
   };
 
@@ -241,11 +274,12 @@ export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, opti
 
   if (candidate.finishReason && candidate.finishReason !== 'STOP') {
     console.warn('[PaintWise] Gemini finish reason:', candidate.finishReason);
-    if (candidate.finishReason === 'MAX_TOKENS') {
-      throw new Error('Gemini response was cut off (too long). Try with a simpler image.');
-    }
     if (candidate.finishReason === 'SAFETY') {
       throw new Error('Gemini blocked the response due to safety filters.');
+    }
+    // For MAX_TOKENS or other reasons, still try to parse what we got
+    if (candidate.finishReason === 'MAX_TOKENS') {
+      console.warn('[PaintWise] Response truncated — will attempt to repair partial JSON');
     }
   }
 
