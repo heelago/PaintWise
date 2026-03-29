@@ -113,7 +113,9 @@ function extractJson(text) {
 
 // ── Prompts ──
 
-const SIMPLE_PROMPT = `Hey, can you help me deconstruct this photo into a buildable image made of SVG layers of each color for a painting tutorial app I'm working on?
+// Multiple prompt variants to test
+const PROMPTS = {
+  simple: `Hey, can you help me deconstruct this photo into a buildable image made of SVG layers of each color for a painting tutorial app I'm working on?
 
 Please first analyze the colors, perspective, and proportions in the image and then recreate a sort of approximation from shapes.
 
@@ -134,7 +136,50 @@ Output the result as JSON matching this schema (no markdown fences, no extra tex
 }
 
 For gradients use: {"type":"defs","content":"<linearGradient id=\\"g1\\" .../>"}
+Use camelCase for SVG attrs (strokeWidth, etc). All values must be computed numbers.`,
+
+  'with-palette': null, // built dynamically below
+
+  'with-reflection': null, // built dynamically below
+};
+
+// Build dynamic variants using image metadata
+function buildDynamicPrompts() {
+  // Read the image to get dimensions
+  const { width, height } = { width: 2000, height: 1500 }; // reference-sunset is 4:3
+  const vbH = Math.round(1000 / (width / height));
+
+  PROMPTS['with-palette'] = `Hey, can you help me deconstruct this photo into a buildable image made of SVG layers for a painting tutorial app?
+
+The image is ${width}x${height}px (landscape). Please use viewBox="0 0 1000 ${vbH}".
+
+I've already extracted the color palette — please use ONLY these hex colors (you may darken or lighten slightly): ["#6b6359","#9b8d78","#3d3228","#503e2e","#1e160f","#c08a4e","#443c34","#786b5a","#595147","#876b48","#2e2720","#ab9874","#b0926e","#917e66"]
+
+Please first analyze the colors, perspective, and proportions in the image and then recreate an approximation from shapes — like a simplified, stylized vector painting with 8-10 color layers ordered back to front.
+
+Note: there appears to be a reflection in the water — please include the reflected elements.
+
+Output the result as JSON matching this schema (no markdown fences, no extra text after the JSON):
+{
+  "viewBox": "0 0 1000 ${vbH}",
+  "layers": [
+    {
+      "id": "layer-id",
+      "name": "Layer Name",
+      "description": "what this layer represents",
+      "paintingTip": "watercolor technique tip naming pigments and brush sizes",
+      "elements": [
+        { "type": "rect|path|circle|ellipse|line|defs", "attrs": { ... } }
+      ]
+    }
+  ]
+}
+
+For gradients use: {"type":"defs","content":"<linearGradient id=\\"g1\\" ...><stop .../></linearGradient>"}
 Use camelCase for SVG attrs (strokeWidth, etc). All values must be computed numbers.`;
+}
+
+buildDynamicPrompts();
 
 // ── Main ──
 
@@ -152,11 +197,15 @@ async function run() {
   let composition = null;
   let rawText = '';
 
+  const promptKey = args.find((a, i) => args[i - 1] === '--prompt') || 'simple';
+  const promptText = PROMPTS[promptKey] || PROMPTS.simple;
+  if (!PROMPTS[promptKey]) console.log(`  ⚠ Unknown prompt "${promptKey}", using "simple"`);
+
   if (mode === 'simple') {
-    console.log('\n📤 Single call (simple prompt)...');
+    console.log(`\n📤 Single call (prompt: ${promptKey})...`);
     const { text, finishReason, elapsed } = await callGemini([
       { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
-      { text: SIMPLE_PROMPT },
+      { text: promptText },
     ]);
     rawText = text;
 
