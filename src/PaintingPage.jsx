@@ -3,7 +3,7 @@ import { ROUND_CONFIGS, REGION_NAMES } from './engine/generateMarks';
 import { findNearestPigment, suggestMix } from './engine/pigments';
 import { generateInstructions } from './engine/instructions';
 import { buildSvgComposition } from './engine/svgBuilder';
-import { generateClaudeSvg } from './engine/claudeSvg';
+import { generateGeminiSvg } from './engine/geminiSvg';
 import SvgViewer from './SvgViewer';
 
 // ── Style constants (shared dark theme) ──────────────────────────
@@ -72,6 +72,7 @@ export default function PaintingPage({ imageData, image, onBack }) {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
   const [aiWarnings, setAiWarnings] = useState([]);
+  const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('paintwise-gemini-key') || '');
 
   // Derived data (computed once when analysis is ready)
   const svgComposition = useMemo(() => {
@@ -91,10 +92,16 @@ export default function PaintingPage({ imageData, image, onBack }) {
     return generateInstructions(analysis, ROUND_CONFIGS);
   }, [analysis]);
 
-  // ── AI SVG generation ─────────────────────────────────────────
+  // ── AI SVG generation (Gemini BYOK) ──────────────────────────
   const triggerAiGeneration = useCallback(async (force = false) => {
     if (aiLoading) return;
-    if (aiComposition && !force) return; // already have it
+    if (aiComposition && !force) return;
+    if (!geminiKey.trim()) {
+      setAiError('Please enter your Gemini API key above');
+      return;
+    }
+    // Persist key for convenience
+    localStorage.setItem('paintwise-gemini-key', geminiKey.trim());
     setAiLoading(true);
     setAiError(null);
     setAiWarnings([]);
@@ -109,7 +116,9 @@ export default function PaintingPage({ imageData, image, onBack }) {
         hasReflection: analysis.hasReflection,
         sceneAvgColor: analysis.sceneAvgColor,
       };
-      const { composition, warnings } = await generateClaudeSvg(image.src, metadata);
+      const { composition, warnings } = await generateGeminiSvg(
+        geminiKey.trim(), image.src, metadata, { force }
+      );
       setAiComposition(composition);
       setAiWarnings(warnings || []);
     } catch (err) {
@@ -117,14 +126,7 @@ export default function PaintingPage({ imageData, image, onBack }) {
     } finally {
       setAiLoading(false);
     }
-  }, [aiLoading, aiComposition, imageData, analysis, image]);
-
-  // Trigger AI generation when switching to ai-svg view
-  useEffect(() => {
-    if (viewStyle === 'ai-svg' && analysis && !aiComposition && !aiLoading && !aiError) {
-      triggerAiGeneration();
-    }
-  }, [viewStyle, analysis, aiComposition, aiLoading, aiError, triggerAiGeneration]);
+  }, [aiLoading, aiComposition, geminiKey, imageData, analysis, image]);
 
   const canvasRef = useRef(null);
   const workerRef = useRef(null);
@@ -541,50 +543,94 @@ export default function PaintingPage({ imageData, image, onBack }) {
           ) : viewStyle === 'svg' ? (
             svgComposition && <SvgViewer composition={svgComposition} />
           ) : viewStyle === 'ai-svg' ? (
-            aiLoading ? (
-              <div style={{ textAlign: 'center', padding: 60 }}>
-                <p style={{ fontFamily: BODY, fontSize: 20, color: TEXT, marginBottom: 12 }}>
-                  Studying your photo...
-                </p>
-                <p style={{ fontFamily: BODY, fontSize: 14, color: MUTED }}>
-                  Claude is analyzing the scene and building a composition
-                </p>
+            <div style={{ width: '100%', maxWidth: 800 }}>
+              {/* API Key input */}
+              {!aiComposition && (
                 <div style={{
-                  width: 200, height: 4, borderRadius: 2, margin: '24px auto',
-                  background: 'rgba(198,154,92,0.15)', overflow: 'hidden',
+                  display: 'flex', gap: 10, alignItems: 'center',
+                  marginBottom: 20, padding: '12px 16px',
+                  background: 'rgba(232,228,223,0.03)',
+                  border: '1px solid rgba(198,154,92,0.12)',
+                  borderRadius: 8,
                 }}>
+                  <label style={{ fontFamily: BODY, fontSize: 13, color: MUTED, whiteSpace: 'nowrap' }}>
+                    Gemini API Key:
+                  </label>
+                  <input
+                    type="password"
+                    value={geminiKey}
+                    onChange={e => setGeminiKey(e.target.value)}
+                    placeholder="AIza..."
+                    style={{
+                      flex: 1, padding: '6px 10px', borderRadius: 5,
+                      border: '1px solid rgba(198,154,92,0.2)',
+                      background: 'rgba(0,0,0,0.3)', color: TEXT,
+                      fontFamily: BODY, fontSize: 14, outline: 'none',
+                    }}
+                  />
+                  <ControlButton
+                    active={true}
+                    onClick={() => triggerAiGeneration(false)}
+                    label="Generate"
+                  />
+                </div>
+              )}
+
+              {aiLoading ? (
+                <div style={{ textAlign: 'center', padding: 60 }}>
+                  <p style={{ fontFamily: BODY, fontSize: 20, color: TEXT, marginBottom: 12 }}>
+                    Studying your photo...
+                  </p>
+                  <p style={{ fontFamily: BODY, fontSize: 14, color: MUTED }}>
+                    Gemini is analyzing the scene and building a composition
+                  </p>
                   <div style={{
-                    width: '60%', height: '100%', borderRadius: 2,
-                    background: ACCENT,
-                    animation: 'pulse 1.5s ease-in-out infinite',
-                  }} />
-                </div>
-              </div>
-            ) : aiError ? (
-              <div style={{ textAlign: 'center', padding: 60 }}>
-                <p style={{ fontFamily: BODY, fontSize: 16, color: '#D45', marginBottom: 16 }}>
-                  {aiError}
-                </p>
-                <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-                  <ControlButton active={false} onClick={() => { setAiError(null); triggerAiGeneration(true); }} label="Retry" />
-                  <ControlButton active={false} onClick={() => setViewStyle('svg')} label="Use Algorithmic SVG" />
-                </div>
-              </div>
-            ) : aiComposition ? (
-              <div style={{ width: '100%' }}>
-                <SvgViewer composition={aiComposition} />
-                {aiWarnings.length > 0 && (
-                  <div style={{ margin: '12px 0', padding: '8px 12px', borderRadius: 6, background: 'rgba(212,170,68,0.1)', border: '1px solid rgba(212,170,68,0.2)' }}>
-                    {aiWarnings.map((w, i) => (
-                      <p key={i} style={{ fontFamily: BODY, fontSize: 12, color: 'rgba(212,170,68,0.7)', margin: '2px 0' }}>{w}</p>
-                    ))}
+                    width: 200, height: 4, borderRadius: 2, margin: '24px auto',
+                    background: 'rgba(198,154,92,0.15)', overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      width: '60%', height: '100%', borderRadius: 2,
+                      background: ACCENT,
+                      animation: 'pulse 1.5s ease-in-out infinite',
+                    }} />
                   </div>
-                )}
-                <div style={{ textAlign: 'center', marginTop: 12 }}>
-                  <ControlButton active={false} onClick={() => triggerAiGeneration(true)} label="Regenerate" />
                 </div>
-              </div>
-            ) : null
+              ) : aiError ? (
+                <div style={{ textAlign: 'center', padding: 40 }}>
+                  <p style={{ fontFamily: BODY, fontSize: 15, color: '#D45', marginBottom: 16 }}>
+                    {aiError}
+                  </p>
+                  <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                    <ControlButton active={false} onClick={() => { setAiError(null); }} label="Try Again" />
+                    <ControlButton active={false} onClick={() => setViewStyle('svg')} label="Use Algorithmic SVG" />
+                  </div>
+                </div>
+              ) : aiComposition ? (
+                <>
+                  <SvgViewer composition={aiComposition} />
+                  {aiWarnings.length > 0 && (
+                    <div style={{ margin: '12px 0', padding: '8px 12px', borderRadius: 6, background: 'rgba(212,170,68,0.1)', border: '1px solid rgba(212,170,68,0.2)' }}>
+                      {aiWarnings.map((w, i) => (
+                        <p key={i} style={{ fontFamily: BODY, fontSize: 12, color: 'rgba(212,170,68,0.7)', margin: '2px 0' }}>{w}</p>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 12 }}>
+                    <ControlButton active={false} onClick={() => { setAiComposition(null); setAiWarnings([]); }} label="New Key" />
+                    <ControlButton active={false} onClick={() => triggerAiGeneration(true)} label="Regenerate" />
+                  </div>
+                </>
+              ) : !aiLoading && !aiError ? (
+                <div style={{ textAlign: 'center', padding: 40 }}>
+                  <p style={{ fontFamily: BODY, fontSize: 16, color: MUTED }}>
+                    Enter your Gemini API key above and click Generate
+                  </p>
+                  <p style={{ fontFamily: BODY, fontSize: 12, color: 'rgba(232,228,223,0.25)', marginTop: 8 }}>
+                    Your key stays in your browser — never sent to our servers
+                  </p>
+                </div>
+              ) : null}
+            </div>
           ) : null}
         </div>
       </div>
