@@ -185,73 +185,74 @@ async function callGemini(apiKey, model, parts, maxTokens = 65536) {
 // z-index layering, color palette, horizon, micro-details.
 // No artistic interpretation — just raw spatial and chromatic data.
 
-const DRAFTSMAN_PROMPT = `You are a precise Computer Vision API analyzing a photograph for watercolor painting deconstruction. Extract geometric structure, 3D volume, lighting, and micro-details into structured JSON.
+const DRAFTSMAN_PROMPT = `You are a precise Computer Vision API analyzing a photograph for watercolor painting deconstruction. Extract structure using a UNIVERSAL painter's ontology that works for ANY subject — landscapes, portraits, still life, urban, nature.
 
 Output ONLY valid JSON. No markdown fences. No explanation.
 
-=== EXTRACTION PROTOCOL ===
+=== UNIVERSAL EXTRACTION PROTOCOL ===
 
-1. **Composition:** Aspect ratio, horizon Y-percent (0=top, 100=bottom).
-2. **Reflection:** Look CAREFULLY for puddle/water/glass reflections — even subtle ones. If the image has ANY vertical symmetry across the horizon, it's a reflection.
-3. **Light Source Analysis:** Identify the light direction. For EVERY architectural element, determine which face is LIT (catching light) and which face is in SHADOW. This creates 3D volume.
-4. **Architectural Volumes (NOT flat rectangles):** Each building is a 3D VOLUME with:
-   - A "lit_face" (the sun-facing surface — warmer, brighter color)
-   - A "shadow_face" (the side away from light — cooler, darker color)
-   - These are TWO separate bounding boxes sharing an edge, creating a sense of depth.
-5. **Scale Anchors (MANDATORY):** You MUST identify at least 5 micro-details that break up empty space and give human scale: birds in flight, antennas, streetlamp fixtures, signage text, railings, puddle edge debris, cracks, wires. Map each with precise coordinates.
-6. **Cloud Topology:** Each cloud mass needs its own bounding box with shape description: "large cumulus, flat base at Y=15%, billowing top reaching Y=5%, left edge at X=10%, right edge X=40%". Describe the edge character (sharp, diffuse, wispy).
-7. **Window Irregularity:** Do NOT map windows as a uniform grid. In real buildings, windows have varying sizes, some are recessed in shadow, some catch light glare, some are partially obscured. Describe which windows are dark/recessed, which are bright/reflective.
+1. **Composition:** Aspect ratio, horizon/primary division Y-percent (0=top, 100=bottom).
+2. **Reflection:** Look CAREFULLY for reflections (puddle, water, glass, mirror). If the image has ANY vertical symmetry across a horizontal axis, it IS a reflection.
+3. **Light Source:** Direction, angle, warm zone, cool zone.
+
+4. **AGNOSTIC LAYER HIERARCHY** — Categorize every element using these universal painter's categories:
+
+   a) **"base_wash"** — The furthest unbroken gradients: skies, studio backdrops, distant blurry walls, water surfaces. Describe gradient direction and color stops.
+
+   b) **"soft_volume"** — Organic, rounded forms with soft/blended edges: clouds, foliage, human faces/skin, flower petals, fabric folds, water reflections, smoke. For each: map the CORE (densest area) and the WISPS (feathered edges) separately. Each soft volume needs 3-5 sub-shapes for layered opacity stacking.
+
+   c) **"hard_geometry"** — Sharp, distinct silhouettes with rigid forms: architecture, rocks, furniture, vehicles, sharp clothing edges, poles, railings. Map lit_face and shadow_face separately. Include the HORIZON SILHOUETTE — the jagged top edge where hard geometry meets the sky (not a straight line).
+
+   d) **"focal_detail"** — Tiny, high-contrast anchors that give scale: birds, text, highlights in eyes, water droplets, lamp fixtures, antennas, cracks, wires. MUST map at least 5.
+
+5. **Horizon Transition Zone:** The horizon is NOT a straight line. Map the actual SILHOUETTE — the jagged profile of buildings/trees/terrain meeting the sky. Provide an approximate path description.
 
 {
   "aspectRatio": "portrait" or "landscape",
   "horizon_y_percent": number,
   "horizon_description": "string",
+  "horizon_silhouette": "description of the jagged profile — e.g. flat then bump at x=20% for tree, spike at x=35% for pole, stepped blocks x=40-70% for buildings",
   "reflection": {
     "present": boolean,
     "type": "puddle" | "water" | "glass" | "none",
     "axis_y_percent": number,
-    "description": "what is reflected, how sharp/distorted, what surface creates it"
+    "description": "what is reflected and how"
   },
   "palette": [
-    { "hex": "#from_authoritative_palette", "pigment": "Traditional Watercolor Name", "where": "where this color dominates" }
+    { "hex": "#from_authoritative_palette", "pigment": "Traditional Watercolor Name", "where": "description" }
   ],
   "light": {
-    "direction": "e.g. low angle from upper-right, golden hour",
-    "angle_degrees": number (0=directly above, 90=horizon level),
-    "warm_zone": "which areas catch warm light",
-    "cool_zone": "which areas are in cool shadow"
+    "direction": "string",
+    "angle_degrees": number,
+    "warm_zone": "string",
+    "cool_zone": "string"
   },
   "layers": [
     {
-      "name": "Layer Name",
-      "z_index": 1,
-      "description": "what this layer contains",
+      "name": "string",
+      "category": "base_wash | soft_volume | hard_geometry | focal_detail",
+      "z_index": number,
       "elements": [
         {
-          "type": "gradient_box | building_lit | building_shadow | window_dark | window_bright | cloud | pole | wire | bird | sign | texture | shadow_cast | reflection_element | scale_anchor",
+          "type": "gradient | volume_core | volume_wisp | lit_face | shadow_face | silhouette_edge | window | detail | texture",
           "bounds": { "x": percent, "y": percent, "w": percent, "h": percent },
           "color": "#hex",
-          "opacity_hint": number (0.3 for distant/faint, 0.9 for close/dark),
-          "edge_character": "sharp | soft | wobbly | diffuse",
-          "details": "specific description"
+          "opacity_hint": number,
+          "edge_character": "sharp | soft | diffuse | jagged",
+          "details": "string"
         }
       ]
     }
   ],
-  "scale_anchors": [
-    { "type": "bird | antenna | lamp_fixture | crack | wire | debris | railing | sign_text",
-      "position": { "x": percent, "y": percent },
-      "size": "tiny | small | medium",
-      "details": "v-shape bird in flight" }
+  "focal_details": [
+    { "type": "string", "position": { "x": percent, "y": percent }, "size": "tiny | small | medium", "details": "string" }
   ],
   "textures": [
-    { "where": "location", "type": "wet_concrete | dry_asphalt | water_ripple | rough_wall",
-      "bounds": { "x": 0, "y": 0, "w": 100, "h": 50 },
-      "character": "heavy grit | subtle grain | smooth | cracked" }
+    { "where": "string", "type": "string", "bounds": { "x": 0, "y": 0, "w": 100, "h": 100 }, "character": "string" }
   ]
 }
 
-Be EXHAUSTIVE. Every building gets BOTH a lit_face AND shadow_face element. Every cloud gets its own bounding box with edge description. You MUST list at least 5 scale_anchors.`;
+Be EXHAUSTIVE. Soft volumes need 3-5 sub-shapes each (core + wisps). Hard geometry needs lit + shadow faces. Map the horizon silhouette profile. List 5+ focal details.`;
 
 function buildDraftsmanContext(metadata) {
   if (!metadata) return '';
@@ -311,11 +312,12 @@ async function analyzeScene(apiKey, imageBase64, model, metadata) {
   return inventory;
 }
 
-// ── Call 2: The "Painter" — Geometric SVG with Watercolor Layering ──
+// ── Call 2: The "Painter" — SVG with Watercolor Physics ─────────────
 //
-// Clean geometric shapes + translucent layering = cubist watercolor study.
-// Architecture is CRISP rects. Clouds are bezier paths + circles.
-// Reflections are STRUCTURAL MIRRORS, not fuzzy copies.
+// Three key upgrades from Gemini's feedback:
+// 1. Procedural cloud stacking (5-10 overlapping paths, not one blob)
+// 2. <use> tag reflections (mathematically perfect, frees up tokens)
+// 3. Jagged horizon silhouette (not a straight line)
 
 function buildPainterPrompt(inventory) {
   let vbW = 800, vbH = 600;
@@ -323,96 +325,99 @@ function buildPainterPrompt(inventory) {
     vbW = 533; vbH = 800;
   }
 
-  // Calculate horizon in pixels
   const hPercent = inventory.horizon_y_percent || 50;
   const hY = Math.round(hPercent / 100 * vbH);
+  const hasRefl = inventory.reflection?.present === true;
 
-  return `You are an SVG engineer creating a watercolor painting study guide. The style is GEOMETRIC and CLEAN — like a cubist interpretation of the scene. Watercolor softness comes from TRANSLUCENT LAYERING and OPACITY, not from blurred or wobbly edges.
+  return `You are an SVG engineer creating a watercolor painting study. Use clean geometric forms for architecture, procedural layered opacity for clouds, and mathematical transforms for reflections.
 
 STRUCTURAL DATA:
 ${JSON.stringify(inventory, null, 2)}
 
 VIEWBOX: "0 0 ${vbW} ${vbH}"
 HORIZON Y: ${hY}px (${hPercent}% from top)
+HAS REFLECTION: ${hasRefl}
 Coords: x_px = percent/100 * ${vbW}, y_px = percent/100 * ${vbH}
 
-Return ONLY valid JSON. No markdown fences. No explanation.
+Return ONLY valid JSON. No markdown fences.
 { "viewBox": "0 0 ${vbW} ${vbH}", "layers": [{ "id": "string", "name": "string", "description": "string", "paintingTip": "string", "elements": [{ "type": "rect|path|circle|ellipse|line|defs", "attrs": {} }] }] }
 
-=== MANDATORY 7-LAYER STRUCTURE ===
+=== LAYER STRUCTURE ===
 
-Layer 1: "Real Sky Wash"
-  A gradient rect covering ONLY the real sky zone (one side of the horizon).
-  Use a linearGradient with 3-4 stops from the palette in a defs element.
-  This is the brighter, cleaner sky.
+Layer 1: "Base Washes"
+  TWO separate gradient rects — one for each side of the horizon.
+  The "real" side is brighter. The "reflected/puddle" side uses the same hues darkened 15-20%.
+  Gradients go in defs elements with "content" string.
+  Example defs: {"type":"defs","content":"<linearGradient id=\\"skyA\\" x1=\\"0%\\" y1=\\"0%\\" x2=\\"0%\\" y2=\\"100%\\"><stop offset=\\"0%\\" stop-color=\\"#5d85a6\\"/><stop offset=\\"100%\\" stop-color=\\"#d69c7a\\"/></linearGradient>"}
+  Example rect: {"type":"rect","attrs":{"x":0,"y":${hY},"width":${vbW},"height":${vbH - hY},"fill":"url(#skyA)"}}
 
-Layer 2: "Reflected Sky Wash"
-  A SEPARATE gradient rect covering the reflected/puddle zone (other side of horizon).
-  Same hues as Layer 1 but ~15-20% darker (muddier, concrete-tinted).
-  TWO separate rects + TWO separate gradients — NOT one gradient spanning both.
+Layer 2: "Soft Volumes" (clouds, foliage, organic forms)
+  === PROCEDURAL CLOUD STACKING ===
+  Do NOT draw one giant path per cloud. Each cloud mass must be built by stacking
+  5-10 SMALLER overlapping <path> elements with VARYING opacities:
+    - 2-3 large shadow shapes (cool dark color, opacity 0.2-0.4)
+    - 2-3 midtone shapes (warm color, opacity 0.4-0.6)
+    - 2-3 highlight shapes (near-white, opacity 0.6-0.9)
+    - 1-2 <circle> elements for the brightest puffy highlights (opacity 0.8-0.9)
+  Use Cubic Bezier (C/S) curves with LUMPY, CAULIFLOWER-LIKE edges:
+    "M100,200 C130,150 180,140 220,170 S290,200 320,180 C350,160 380,190 400,200 L400,250 C300,260 200,255 100,250 Z"
+  This stacking creates the wet-on-wet watercolor bleed effect.
+  If reflection exists: include reflected cloud shapes (darker, lower opacity) on the other side of the horizon.
 
-Layer 3: "Cloud Volumes"
-  Three tonal layers of clouds in BOTH real and reflected zones:
-  a) SHADOW clouds: large <path> shapes, cool dark colors, opacity 0.5-0.7
-  b) MIDTONE clouds: <path> shapes, warm colors, opacity 0.7-0.9
-  c) HIGHLIGHT clouds: <circle> elements with near-white warm fill, opacity 0.8-0.9
-  Clouds use Bezier paths for organic edges:
-    "M-20,250 Q80,220 150,300 T300,320 T450,400 L-20,400 Z"
-  Reflected clouds: same shapes mirrored across horizon, darker colors, lower opacity.
+Layer 3: "Hard Geometry" (architecture, rigid forms)
+  a) ONE dark shadow <rect> spanning the entire horizon band as a depth base.
+  b) Individual building faces as CLEAN <rect> elements on top.
+     Buildings sit on the horizon line, extending away from it.
+  c) Windows as small dark <rect> elements — NOT a uniform grid.
+     Vary widths by 1-4px, skip some (glare), darken some (recessed).
+  d) Shadow polygons under overhangs (dark translucent trapezoid <path>).
 
-Layer 4: "Building Geometry"
-  THIS IS THE KEY LAYER. Follow this exact pattern:
-  a) First: ONE dark shadow <rect> spanning the entire building/horizon band.
-     Example: {"type":"rect","attrs":{"x":-10,"y":${hY - 100},"width":${vbW + 20},"height":200,"fill":"#4d4743"}}
-  b) Then: Individual building faces as CLEAN <rect> elements ON TOP of the shadow base.
-     Real buildings sit ON the horizon: y=${hY}, height extends downward.
-     Example: {"type":"rect","attrs":{"x":310,"y":${hY},"width":300,"height":120,"fill":"#ebaa78"}}
-  c) REFLECTED buildings sit ABOVE the horizon (for inverted puddle) or BELOW (for normal reflection):
-     reflected_height = real_height * 0.85
-     reflected_y = ${hY} - reflected_height
-     Darken the fill color by 15-20%.
-     Example: {"type":"rect","attrs":{"x":310,"y":${hY - 102},"width":300,"height":102,"fill":"#b88860","opacity":0.7}}
-  d) Windows: small dark <rect> elements at specific positions. NOT a uniform grid.
-     Some windows are wider, some narrower, some skipped (suggesting glare).
-  e) HORIZON LINE: a thin dark <rect> spanning the full width at the exact horizon:
-     {"type":"rect","attrs":{"x":0,"y":${hY - 2},"width":${vbW},"height":4,"fill":"#202b36","opacity":0.8}}
+  === JAGGED HORIZON SILHOUETTE ===
+  Do NOT use a single straight <line> or thin <rect> for the horizon.
+  The horizon MUST be a <path> that follows the actual jagged silhouette
+  of buildings/trees/terrain meeting the sky. Use the horizon_silhouette
+  description from the structural data to build this path.
+  Example: "M0,${hY} L80,${hY} L80,${hY - 5} L120,${hY - 5} L120,${hY - 40} L125,${hY - 40} L125,${hY} L200,${hY} ..."
+  Fill this path with a dark color (the shadow base extends through it).
 
-Layer 5: "Surface Texture"
-  For concrete/puddle surfaces, use a combination of:
-  a) A dark <path> covering the puddle edge zone, opacity 0.5-0.7
-  b) 2-3 sweeping <path> strokes with fill="none", stroke=dark_color,
+${hasRefl ? `Layer 4: "Reflection"
+  === USE-TAG REFLECTION TECHNIQUE ===
+  Do NOT manually redraw every reflected element. Instead:
+  1. All "real" hard geometry elements from Layer 3 should work as the source.
+  2. Create a COPY of each real building rect, but with:
+     - reflected_height = real_height × 0.85
+     - reflected_y = horizon_y - reflected_height (for puddle above) or horizon_y + offset (for water below)
+     - Color darkened by multiplying RGB by 0.80
+     - Opacity reduced by 0.15 from the real element
+  3. The reflected clouds from Layer 2 should already be included there.
+  4. THEN overlay the "Surface Texture" layer ON TOP of the reflection to
+     ground it as a puddle/water surface.
+
+` : ''}Layer ${hasRefl ? 5 : 4}: "Surface Texture"
+  For textured surfaces (concrete, asphalt, wet ground), use:
+  a) A dark <path> wash over the puddle/ground zone (opacity 0.4-0.6)
+  b) 2-4 sweeping <path> strokes: fill="none", stroke=dark_color,
      strokeWidth=40-60, strokeDasharray="5,15,20,10", opacity 0.2-0.4
-  c) 5-8 small <circle> elements (r=1-3) scattered in the texture zone for grit
+  c) 5-10 small <circle> grit dots (r=1-3, scattered, mixed dark/light)
+  This texture OVERLAYS the reflection, making it look like a real surface.
 
-Layer 6: "Fine Details"
-  Poles: thin <rect> elements, width=2-4px, perfectly straight (NOT wobbly).
-  Lamp fixtures: small geometric shapes (trapezoid <path>, small <rect> elements).
-  Both the real pole AND its reflection (same x, mirrored y, slightly darker).
-  Birds: small <path> v-shapes. Example: "M220,250 Q225,255 230,250 Q225,252 220,250 Z"
-  Both real birds AND reflected birds (inverted v-shapes on the other side of horizon).
+Layer ${hasRefl ? 6 : 5}: "Focal Details"
+  The darkest, most concentrated marks (last in watercolor — least water).
+  - Poles: thin <rect> width=2-4px, straight. Include reflected version if reflection exists.
+  - Lamp fixtures: geometric <path> trapezoids + small <rect> elements.
+  - Birds: <path> v-shapes. Example: "M220,250 Q225,255 230,250 Q225,252 220,250 Z"
+  - Include BOTH real and reflected versions of every detail element.
+  - Wires, antennas, cracks, signage — everything from focal_details in the data.
 
-Layer 7: "Signage & Text Details"
-  Any visible text, numbers, or markings on buildings.
-  Use <rect> elements sized to suggest text blocks (we cannot use <text> in this format).
+=== ATMOSPHERIC PERSPECTIVE ===
+Background (base washes, distant clouds): opacity 0.2-0.5, large shapes.
+Midground (architecture, main clouds): opacity 0.5-0.8.
+Foreground (texture, details, poles): opacity 0.7-0.95, sharp edges.
 
-=== CRITICAL: REFLECTION TECHNIQUE ===
-
-If the structural data indicates a reflection, EVERY element that appears in the real scene MUST also appear in the reflected zone. The reflection is a STRUCTURAL MIRROR:
-- Same X positions and widths
-- Heights compressed by 0.85×
-- Y positions mirrored across horizon_y (${hY}px)
-- Colors darkened 15-20% (multiply each RGB channel by 0.80-0.85)
-- Opacity reduced by ~0.15 from the real element
-- NO blur, NO wobble, NO smearing — clean geometric mirroring
-
-=== SVG TECHNIQUE ===
-
-GRADIENTS: { "type": "defs", "content": "<linearGradient id=\\"skyGrad\\" x1=\\"0%\\" y1=\\"100%\\" x2=\\"0%\\" y2=\\"0%\\"><stop offset=\\"0%\\" stop-color=\\"#5d85a6\\"/><stop offset=\\"50%\\" stop-color=\\"#8ba5b8\\"/><stop offset=\\"85%\\" stop-color=\\"#e3bca5\\"/><stop offset=\\"100%\\" stop-color=\\"#d69c7a\\"/></linearGradient>" }
-Then reference: {"type":"rect","attrs":{"x":0,"y":${hY},"width":${vbW},"height":${vbH - hY},"fill":"url(#skyGrad)"}}
-
+=== TECHNIQUE RULES ===
 ALL ATTRS camelCase: strokeWidth, strokeDasharray, strokeLinecap.
-COLORS: ONLY from palette. May darken (×0.80) or lighten (×1.15) for reflected/highlight variants.
-PAINTING TIPS: Name pigments, brush sizes, techniques (wet-on-wet, dry brush, lifting).`;
+COLORS: ONLY from palette. May darken (×0.80) or lighten (×1.15).
+PAINTING TIPS: Name pigments, brush sizes, techniques.`;
 }
 
 async function generateSvgFromInventory(apiKey, imageBase64, inventory, model) {
