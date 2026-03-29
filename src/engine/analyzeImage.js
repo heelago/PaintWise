@@ -445,7 +445,8 @@ function buildWarmGlowMap(tempMap, satMap, total) {
 //   7 = warm glow
 
 export function analyzeImage(imageData, width, height, onProgress) {
-  const px    = imageData.data;
+  // Accept either ImageData object or raw Uint8ClampedArray
+  const px    = imageData.data ?? imageData;
   const w     = width;
   const h     = height;
   const total = w * h;
