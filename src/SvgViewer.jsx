@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 
 // ── Style constants (matching PaintingPage dark theme) ────────────
 const BG      = '#1E1C1A';
@@ -16,11 +16,19 @@ function renderElement(el, index, outlineMode) {
   const attrs = { ...el.attrs };
 
   if (outlineMode && el.type !== 'defs') {
-    attrs.fill = 'none';
-    attrs.stroke = el.attrs.fill || ACCENT;
-    attrs.strokeWidth = 1;
-    attrs.opacity = 0.7;
-    delete attrs.filter;
+    const origStroke = el.attrs.stroke;
+    const origFill = el.attrs.fill;
+    if (origStroke && origFill === 'none') {
+      // Already a stroke-only element (texture paths) — thin it out
+      attrs.strokeWidth = 1;
+      attrs.opacity = 0.5;
+      delete attrs.strokeDasharray;
+    } else {
+      attrs.fill = 'none';
+      attrs.stroke = origFill || ACCENT;
+      attrs.strokeWidth = 1;
+      attrs.opacity = 0.7;
+    }
   }
 
   const key = `${el.type}-${index}`;
@@ -40,8 +48,12 @@ function renderElement(el, index, outlineMode) {
 
 function layerDominantColor(layer) {
   for (const el of layer.elements) {
-    if (el.type !== 'defs' && el.attrs.fill && !el.attrs.fill.startsWith('url(')) {
+    if (el.type === 'defs') continue;
+    if (el.attrs.fill && el.attrs.fill !== 'none' && !el.attrs.fill.startsWith('url(')) {
       return el.attrs.fill;
+    }
+    if (el.attrs.stroke && el.attrs.stroke !== 'none') {
+      return el.attrs.stroke;
     }
   }
   return ACCENT;
@@ -51,11 +63,19 @@ function layerDominantColor(layer) {
 
 export default function SvgViewer({ composition }) {
   const { viewBox, layers } = composition;
+  const layerCount = layers.length;
 
   const [visibleLayers, setVisibleLayers] = useState(() => layers.map(() => true));
-  const [activeStep, setActiveStep] = useState(layers.length - 1);
+  const [activeStep, setActiveStep] = useState(layerCount - 1);
   const [outlineMode, setOutlineMode] = useState(false);
   const [freeToggle, setFreeToggle] = useState(false);
+
+  // Reset state when layer count changes (new composition)
+  useEffect(() => {
+    setVisibleLayers(layers.map(() => true));
+    setActiveStep(layerCount - 1);
+    setFreeToggle(false);
+  }, [layerCount]);
 
   // Collect all defs content across all visible layers
   const allDefs = useMemo(() => {
