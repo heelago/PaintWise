@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ROUND_CONFIGS, REGION_NAMES } from './engine/generateMarks';
 import { findNearestPigment, suggestMix } from './engine/pigments';
 import { generateInstructions } from './engine/instructions';
-import { buildSvgComposition } from './engine/svgBuilder';
 import { generateGeminiSvg } from './engine/geminiSvg';
 import SvgViewer from './SvgViewer';
 
@@ -76,19 +75,6 @@ export default function PaintingPage({ imageData, image, onBack }) {
   const [aiWarnings, setAiWarnings] = useState([]);
   const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('paintwise-gemini-key') || '');
   const [forceReflection, setForceReflection] = useState(false);
-
-  // Derived data (computed once when analysis is ready)
-  const svgComposition = useMemo(() => {
-    if (!analysis) return null;
-    const maxDisplay = 800;
-    let dw = imageData.width, dh = imageData.height;
-    if (dw > maxDisplay || dh > maxDisplay) {
-      const s = maxDisplay / Math.max(dw, dh);
-      dw = Math.round(dw * s);
-      dh = Math.round(dh * s);
-    }
-    return buildSvgComposition(analysis, dw, dh);
-  }, [analysis, imageData]);
 
   const instructions = useMemo(() => {
     if (!analysis) return [];
@@ -346,11 +332,6 @@ export default function PaintingPage({ imageData, image, onBack }) {
             label="Pointillist"
           />
           <ControlButton
-            active={viewStyle === 'svg'}
-            onClick={() => setViewStyle('svg')}
-            label="SVG Layers"
-          />
-          <ControlButton
             active={viewStyle === 'ai-svg'}
             onClick={() => setViewStyle('ai-svg')}
             label="AI Composition"
@@ -548,8 +529,6 @@ export default function PaintingPage({ imageData, image, onBack }) {
                 />
               </div>
             </>
-          ) : viewStyle === 'svg' ? (
-            svgComposition && <SvgViewer composition={svgComposition} />
           ) : viewStyle === 'ai-svg' ? (
             <div style={{ width: '100%', maxWidth: 800 }}>
               {/* API Key input + options */}
@@ -631,7 +610,7 @@ export default function PaintingPage({ imageData, image, onBack }) {
                   </p>
                   <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
                     <ControlButton active={false} onClick={() => { setAiError(null); }} label="Try Again" />
-                    <ControlButton active={false} onClick={() => setViewStyle('svg')} label="Use Algorithmic SVG" />
+                    <ControlButton active={false} onClick={() => setViewStyle('pointillist')} label="Switch to Pointillist" />
                   </div>
                 </div>
               ) : aiComposition ? (
