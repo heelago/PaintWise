@@ -1,6 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ROUND_CONFIGS, REGION_NAMES } from './engine/generateMarks';
 import { findNearestPigment, suggestMix } from './engine/pigments';
+import { generateInstructions } from './engine/instructions';
+import { buildSvgComposition } from './engine/svgBuilder';
+import SvgViewer from './SvgViewer';
 
 // ── Style constants (shared dark theme) ──────────────────────────
 const BG       = '#1E1C1A';
@@ -61,6 +64,25 @@ export default function PaintingPage({ imageData, image, onBack }) {
     ROUND_CONFIGS.map(() => true)
   );
   const [showPhoto, setShowPhoto] = useState(false);
+  const [viewStyle, setViewStyle] = useState('pointillist'); // 'pointillist' | 'svg'
+
+  // Derived data (computed once when analysis is ready)
+  const svgComposition = useMemo(() => {
+    if (!analysis) return null;
+    const maxDisplay = 800;
+    let dw = imageData.width, dh = imageData.height;
+    if (dw > maxDisplay || dh > maxDisplay) {
+      const s = maxDisplay / Math.max(dw, dh);
+      dw = Math.round(dw * s);
+      dh = Math.round(dh * s);
+    }
+    return buildSvgComposition(analysis, dw, dh);
+  }, [analysis, imageData]);
+
+  const instructions = useMemo(() => {
+    if (!analysis) return [];
+    return generateInstructions(analysis, ROUND_CONFIGS);
+  }, [analysis]);
 
   const canvasRef = useRef(null);
   const workerRef = useRef(null);
@@ -124,7 +146,7 @@ export default function PaintingPage({ imageData, image, onBack }) {
         drawMarks(ctx, marks[i], marks[i].length);
       }
     }
-  }, [marks, texture, visibleRounds]);
+  }, [marks, texture, visibleRounds, viewStyle]);
 
   // ── Toggle round visibility ────────────────────────────────────
   const toggleRound = useCallback((idx) => {
@@ -229,10 +251,11 @@ export default function PaintingPage({ imageData, image, onBack }) {
   // ── Results view ───────────────────────────────────────────────
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100vh',
       background: BG,
       display: 'flex',
       flexDirection: 'column',
+      overflow: 'hidden',
     }}>
       {/* Header */}
       <div style={{
@@ -264,6 +287,18 @@ export default function PaintingPage({ imageData, image, onBack }) {
         }}>
           PaintWise
         </h1>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
+          <ControlButton
+            active={viewStyle === 'pointillist'}
+            onClick={() => setViewStyle('pointillist')}
+            label="Pointillist"
+          />
+          <ControlButton
+            active={viewStyle === 'svg'}
+            onClick={() => setViewStyle('svg')}
+            label="SVG Layers"
+          />
+        </div>
       </div>
 
       {/* Main layout */}
@@ -331,124 +366,134 @@ export default function PaintingPage({ imageData, image, onBack }) {
           {/* Painting Steps */}
           <Section title="Painting Steps">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {ROUND_CONFIGS.map((rc, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: '8px 10px',
-                    borderRadius: 6,
-                    background: visibleRounds[i]
-                      ? 'rgba(198,154,92,0.06)'
-                      : 'transparent',
-                    cursor: 'pointer',
-                    transition: 'background 0.15s',
-                  }}
-                  onClick={() => toggleRound(i)}
-                >
-                  {/* Color dot */}
-                  <div style={{
-                    width: 14,
-                    height: 14,
-                    borderRadius: '50%',
-                    background: rc.color,
-                    flexShrink: 0,
-                    opacity: visibleRounds[i] ? 1 : 0.3,
-                    border: '1px solid rgba(255,255,255,0.08)',
-                  }} />
-                  {/* Round label */}
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <p style={{
-                      fontFamily: BODY,
-                      fontSize: 14,
-                      color: visibleRounds[i] ? TEXT : MUTED,
-                      margin: 0,
-                    }}>
-                      {i + 1}. {rc.name}
-                    </p>
-                    <p style={{
-                      fontFamily: BODY,
-                      fontSize: 12,
-                      color: 'rgba(232,228,223,0.3)',
-                      margin: 0,
-                    }}>
-                      {rc.description}
-                    </p>
+              {ROUND_CONFIGS.map((rc, i) => {
+                const instr = instructions[i];
+                return (
+                  <div key={i}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        padding: '8px 10px',
+                        borderRadius: 6,
+                        background: visibleRounds[i]
+                          ? 'rgba(198,154,92,0.06)'
+                          : 'transparent',
+                        cursor: 'pointer',
+                        transition: 'background 0.15s',
+                      }}
+                      onClick={() => toggleRound(i)}
+                    >
+                      <div style={{
+                        width: 14, height: 14, borderRadius: '50%',
+                        background: rc.color, flexShrink: 0,
+                        opacity: visibleRounds[i] ? 1 : 0.3,
+                        border: '1px solid rgba(255,255,255,0.08)',
+                      }} />
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <p style={{
+                          fontFamily: BODY, fontSize: 14,
+                          color: visibleRounds[i] ? TEXT : MUTED, margin: 0,
+                        }}>
+                          {instr?.title || `${i + 1}. ${rc.name}`}
+                        </p>
+                        <p style={{
+                          fontFamily: BODY, fontSize: 11,
+                          color: 'rgba(232,228,223,0.35)', margin: '2px 0 0',
+                        }}>
+                          {instr?.timing || ''}{instr?.brush ? ` · ${instr.brush}` : ''}
+                        </p>
+                      </div>
+                      <span style={{
+                        fontSize: 16,
+                        color: visibleRounds[i] ? ACCENT : 'rgba(232,228,223,0.2)',
+                        flexShrink: 0,
+                      }}>
+                        {visibleRounds[i] ? '\u25C9' : '\u25CB'}
+                      </span>
+                    </div>
+                    {/* Expanded instruction when visible */}
+                    {visibleRounds[i] && instr && (
+                      <div style={{
+                        padding: '8px 10px 8px 34px',
+                        fontSize: 13, fontFamily: BODY,
+                        color: 'rgba(232,228,223,0.55)',
+                        lineHeight: 1.5,
+                      }}>
+                        <p style={{ margin: '0 0 6px' }}>{instr.instruction}</p>
+                        {instr.tips?.length > 0 && (
+                          <ul style={{ margin: 0, paddingLeft: 16 }}>
+                            {instr.tips.map((tip, j) => (
+                              <li key={j} style={{ marginBottom: 3 }}>{tip}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {/* Eye toggle */}
-                  <span style={{
-                    fontSize: 16,
-                    color: visibleRounds[i] ? ACCENT : 'rgba(232,228,223,0.2)',
-                    flexShrink: 0,
-                  }}>
-                    {visibleRounds[i] ? '\u25C9' : '\u25CB'}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Section>
         </div>
 
-        {/* ── Canvas area ──────────────────────────────────────── */}
+        {/* ── Main content area ────────────────────────────────── */}
         <div style={{
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'flex-start',
           padding: 24,
           overflow: 'auto',
           position: 'relative',
         }}>
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            <canvas
-              ref={canvasRef}
-              width={canvasW}
-              height={canvasH}
-              style={{
-                maxWidth: '100%',
-                height: 'auto',
-                borderRadius: 8,
-                boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
-                display: 'block',
-              }}
-            />
-            {/* Photo overlay */}
-            {showPhoto && (
-              <img
-                src={image.src}
-                alt="Reference"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: 8,
-                  objectFit: 'cover',
-                  opacity: 0.5,
-                  pointerEvents: 'none',
-                }}
-              />
-            )}
-          </div>
-
-          {/* Controls below canvas */}
-          <div style={{
-            display: 'flex',
-            gap: 12,
-            marginTop: 16,
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-          }}>
-            <ControlButton
-              active={showPhoto}
-              onClick={() => setShowPhoto((p) => !p)}
-              label={showPhoto ? 'Hide Photo' : 'Show Photo'}
-            />
-          </div>
+          {viewStyle === 'pointillist' ? (
+            <>
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <canvas
+                  ref={canvasRef}
+                  width={canvasW}
+                  height={canvasH}
+                  style={{
+                    maxWidth: '100%',
+                    height: 'auto',
+                    borderRadius: 8,
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+                    display: 'block',
+                  }}
+                />
+                {showPhoto && (
+                  <img
+                    src={image.src}
+                    alt="Reference"
+                    style={{
+                      position: 'absolute',
+                      top: 0, left: 0,
+                      width: '100%', height: '100%',
+                      borderRadius: 8,
+                      objectFit: 'cover',
+                      opacity: 0.5,
+                      pointerEvents: 'none',
+                    }}
+                  />
+                )}
+              </div>
+              <div style={{
+                display: 'flex', gap: 12, marginTop: 16,
+                flexWrap: 'wrap', justifyContent: 'center',
+              }}>
+                <ControlButton
+                  active={showPhoto}
+                  onClick={() => setShowPhoto((p) => !p)}
+                  label={showPhoto ? 'Hide Photo' : 'Show Photo'}
+                />
+              </div>
+            </>
+          ) : (
+            svgComposition && <SvgViewer composition={svgComposition} />
+          )}
         </div>
       </div>
     </div>
