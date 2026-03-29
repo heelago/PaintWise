@@ -36,7 +36,7 @@ async function callGemini(contents, { maxTokens = 65536 } = {}) {
   const body = {
     contents: isMultiTurn ? contents : [{ parts: contents }],
     generationConfig: {
-      temperature: 0.7,
+      temperature: 0.8,
       maxOutputTokens: maxTokens,
     },
   };
@@ -201,17 +201,27 @@ async function run() {
 
   if (mode === 'single' || mode === 'convo') {
     // Detect image dimensions
-    const sizeOf = (await import('image-size')).default;
     let imgW = 1000, imgH = 750;
     try {
+      const sizeOf = (await import('image-size')).default;
       const dims = sizeOf(IMAGE_PATH);
       imgW = dims.width; imgH = dims.height;
-    } catch { /* fallback */ }
+    } catch {
+      // Fallback: use sips on macOS
+      try {
+        const { execSync } = await import('child_process');
+        const out = execSync(`sips -g pixelWidth -g pixelHeight "${IMAGE_PATH}" 2>/dev/null`).toString();
+        const wm = out.match(/pixelWidth:\s*(\d+)/);
+        const hm = out.match(/pixelHeight:\s*(\d+)/);
+        if (wm && hm) { imgW = +wm[1]; imgH = +hm[1]; }
+      } catch { /* give up */ }
+    }
     const isPortrait = imgH > imgW;
     const vbW = 1000;
     const vbH = Math.round(1000 / (imgW / imgH));
 
-    const singlePrompt = `Hey buddy, can you help me deconstruct this photo into a buildable image made of svg layers of each color for a painting tutorial app im working on? please first analyze the colors, perspective, and proportions in the image and then recreate a sort of approximation from shapes. it should be recognizable, with as many details as you can recreate - but with simple svg shapes. Build it as 8-10 color layers ordered back to front.
+    const orientation = isPortrait ? 'portrait (taller than wide)' : 'landscape (wider than tall)';
+    const singlePrompt = `Hey buddy, can you help me deconstruct this ${orientation} photo into a buildable image made of svg layers of each color for a painting tutorial app im working on? please first analyze the colors, perspective, and proportions in the image and then recreate a sort of approximation from shapes. it should be recognizable, with as many details as you can recreate - but with simple svg shapes. Build it as 8-10 color layers ordered back to front.
 
 Output the result as JSON matching this schema (no markdown fences, no extra text after the JSON):
 {
