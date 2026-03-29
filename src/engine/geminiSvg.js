@@ -226,28 +226,29 @@ Be EXHAUSTIVE and PRECISE. Measure every bounding box carefully. List every wind
 function buildDraftsmanContext(metadata) {
   if (!metadata) return '';
 
-  const parts = ['\n\nALGORITHMIC PRE-ANALYSIS (use as reference, verify against what you see):'];
+  const parts = ['\n\n### AUTHORITATIVE ALGORITHMIC DATA\nDo not guess the color palette. You MUST use the following data provided by our local algorithmic analysis as your ground truth.'];
 
-  // Feed centroids as authoritative color palette
+  // Feed centroids as authoritative palette — strict dropdown, no invention
   if (metadata.centroids?.length) {
-    parts.push('\nMEASURED COLOR PALETTE (sampled from actual pixels via k-means clustering — use these exact hex values in your palette):');
-    metadata.centroids.forEach((c, i) => {
-      const hex = '#' + c.map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
-      parts.push(`  ${i + 1}. ${hex} — rgb(${c.join(', ')})`);
-    });
+    const hexList = metadata.centroids.map(c =>
+      '#' + c.map(v => Math.round(v).toString(16).padStart(2, '0')).join('')
+    );
+    parts.push(`\n**Authoritative Palette** (k-means clustered from actual pixels): ${JSON.stringify(hexList)}`);
+    parts.push('Assign ONLY these exact hex codes to the elements you map. Do NOT invent new hex codes. For each hex, provide the closest traditional watercolor pigment name.');
   }
 
-  // Horizon hint
+  // Horizon
   if (metadata.hasHorizon && metadata.horizonY != null) {
     const pct = Math.round((metadata.horizonY / metadata.height) * 100);
-    parts.push(`\nHORIZON HINT: Our edge-detection found a strong horizontal contrast line at ~${pct}% from the top. Verify this matches what you see.`);
+    parts.push(`\n**Horizon Detected:** Strong horizontal contrast line at ~${pct}% from the top. Verify and refine this position.`);
   }
 
-  // Reflection hint — be permissive, ask Gemini to look carefully
-  parts.push(`\nREFLECTION CHECK: Look carefully for puddle reflections, water mirrors, or any symmetry across the horizon. Even partial reflections count. Our algorithm ${metadata.hasReflection ? 'DID detect' : 'did NOT detect'} a reflection — but verify with your own eyes. Inverted puddle reflections are common in urban photography.`);
+  // Reflection — strong hint to look carefully
+  const reflDetected = metadata.hasReflection;
+  parts.push(`\n**Structural Hint — Reflection:** Our analysis ${reflDetected ? 'detected horizontal symmetry suggesting a reflection' : 'did NOT detect a reflection, BUT look carefully anyway'}. Puddle reflections and water mirrors are common in urban golden-hour photography. If you see ANY symmetry across the horizon (even partial), set has_reflection to true and map the reflection axis.`);
 
-  // Image dimensions
-  parts.push(`\nIMAGE DIMENSIONS: ${metadata.width} x ${metadata.height} pixels (${metadata.width > metadata.height ? 'landscape' : 'portrait'})`);
+  // Dimensions
+  parts.push(`\n**Image:** ${metadata.width} x ${metadata.height} pixels (${metadata.width > metadata.height ? 'landscape' : 'portrait'})`);
 
   return parts.join('\n');
 }
@@ -351,7 +352,9 @@ CRITICAL WATERCOLOR SVG TECHNIQUES — you MUST apply these:
     - Cloud volumes (organic bezier paths, translucent)
     - Architecture (buildings with wobble, windows as dark rects)
     - Foreground details (poles, wires, birds)
-    - Texture overlays (dry brush dasharray paths)`;
+    - Texture overlays (dry brush dasharray paths)
+
+11. **COLOR DISCIPLINE:** Use ONLY the hex codes from the structural data's palette. Do NOT invent new colors. You may darken or lighten these hex codes for shadows/highlights (multiply RGB by 0.7-0.9 for shadows, 1.1-1.3 for highlights), but the base hues must come from the palette.`;
 }
 
 async function generateSvgFromInventory(apiKey, imageBase64, inventory, model) {
