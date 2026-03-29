@@ -1,42 +1,10 @@
 # PaintWise — Handoff Document
 
-## Current State (commit after this doc)
+## Current State (v-grid-overlay)
 
 The app is functional with two rendering modes:
 1. **Pointillist** — local canvas-based, 40K+ elliptical marks, instant, no API needed
-2. **AI Composition** — Gemini 2.5 Flash two-call pipeline producing layered SVG
-
-## What Works Well
-
-- **Upload flow** — drag-drop, resize to 2000px, JPEG/PNG/WebP
-- **Algorithmic analysis** — k-means palette (14 centroids), horizon detection, region maps, all in Web Worker
-- **Pointillist canvas** — 10-round mark generation, grid focus with zoom, photo overlay
-- **AI two-call pipeline** — Draftsman (scene inventory) → Painter (SVG JSON)
-- **Color fidelity** — k-means centroids passed as authoritative palette to Gemini
-- **SvgViewer** — layer toggle, step-through, outline mode, watercolor FX filter, save PNG/JPG
-- **Reflection checkbox** — user manually flags reflections when algorithm misses them
-- **Caching** — inventory and composition cached in localStorage by image hash
-- **Math expression repair** — handles Gemini's `372 + 50 * 0.85` outputs
-- **Markdown fence stripping** — handles Gemini wrapping JSON in ```json blocks
-
-## Known Issues / What Needs Work
-
-### SVG Quality Inconsistency
-The AI composition output varies significantly between runs and between different photos. The puddle reflection photo sometimes produces excellent results and sometimes mediocre ones. The kayak photo produced nearly blank output. This is the #1 issue.
-
-**Root cause:** Gemini's output is non-deterministic. The same prompt can produce wildly different SVG quality. The prompt is also long and complex, which means Gemini sometimes focuses on easy parts (gradients) and runs out of steam on hard parts (individual building rects, detailed reflections).
-
-**Possible solutions to explore:**
-- Split Painter into 2 calls (base composition + detail pass)
-- Use `gemini-2.5-pro` instead of `flash` for higher quality (costs more)
-- Add few-shot examples of good SVG output in the prompt
-- Reduce prompt length to give Gemini more token budget for actual SVG
-
-### Reflection Detection
-Our `analyzeImage.js` fails to detect puddle reflections (like the inverted puddle photo). The user must manually check the "reflection" checkbox. The algorithm looks for mirrored luminance patterns across the horizon, but buildings in the middle break the heuristic.
-
-### Generalizability
-The Draftsman prompt uses agnostic ontology (base_wash/soft_volume/hard_geometry/focal_detail) which should work for any subject. But the Painter prompt still has some landscape-biased examples. Photos without horizons or buildings (like the kayak) produce thin results.
+2. **AI Composition** — Gemini 3 Flash single-call pipeline producing layered SVG
 
 ## Architecture
 
@@ -45,7 +13,8 @@ src/
   App.jsx                — State router (upload → painting)
   UploadPage.jsx         — Drag-drop upload + sample photo
   PaintingPage.jsx       — Results page (Pointillist | AI Composition tabs)
-  SvgViewer.jsx          — SVG renderer with layers, controls, FX, save
+  SvgViewer.jsx          — SVG renderer with layers, controls, FX, save, grid overlay
+  GridOverlay.jsx        — Grid lines, cell magnification, distance measurement
 
   engine/
     analyzeImage.js      — Generic photo analysis (Web Worker compatible)
@@ -53,48 +22,111 @@ src/
     worker.js            — Web Worker wrapper
     pigments.js          — 79 watercolor pigments, LAB matching
     instructions.js      — Template painting instructions per round
-    geminiSvg.js         — Two-call Gemini pipeline (Draftsman + Painter)
-    claudeSvg.js         — Claude API caller (unused, kept for future)
+    geminiSvg.js         — Single-call Gemini pipeline (raw SVG → parsed layers)
     verifyComposition.js — Schema/color/proportion validation
-    svgBuilder.js        — Algorithmic SVG builder (unused, kept for reference)
     useImageUpload.js    — Upload hook
 
 api/
-  generate-svg.js        — Vercel serverless function for Claude API (unused currently)
+  generate-svg.js        — Vercel serverless function (unused currently)
+
+test-prompt.mjs          — CLI test script for prompt iteration
+test-raw-svg.mjs         — CLI test for raw SVG output
+test-painter-algo.mjs    — CLI test for painter's algorithm prompt
 
 .env.local               — VITE_GEMINI_KEY (gitignored)
-PIPELINE.md              — Full prompt documentation
 ```
 
-## Key Files for Prompt Iteration
+## AI SVG Pipeline (Current)
 
-**`src/engine/geminiSvg.js`** — Contains both prompts:
-- `DRAFTSMAN_PROMPT` (lines ~188-255) — Scene inventory extraction
-- `buildPainterPrompt()` (lines ~330-420) — SVG construction
-- `buildDraftsmanContext()` (lines ~257-284) — Injects k-means palette + hints
-- `extractJson()` (lines ~66-125) — JSON parsing with fence stripping + math eval + truncation repair
+**Model:** `gemini-3-flash-preview` (Gemini 3 Flash)
+**Temperature:** 0.8
+**Max output tokens:** 65536
+**Architecture:** Single API call, raw SVG output, DOMParser conversion
 
-**`src/SvgViewer.jsx`** — SVG renderer:
-- Renders composition JSON as React SVG elements
-- Handles defs/gradients via dangerouslySetInnerHTML
+### How it works:
+
+1. User uploads photo → local `analyzeImage.js` extracts palette, horizon, regions
+2. Single Gemini call with image + conversational prompt asking for raw `<svg>` output
+3. Gemini outputs SVG markup with `<g id="layer-name">` groups
+4. `parseSvgToComposition()` uses browser DOMParser to convert raw SVG into `{ viewBox, layers: [{ id, name, elements }] }` format
+5. SvgViewer renders the parsed composition with layer toggles
+
+### The Prompt
+
+Simple conversational tone — no system instruction, no structured schemas:
+
+```
+Hey buddy, can you help me deconstruct this [orientation] photo into a
+buildable image made of svg layers of each color for a painting tutorial
+app im working on? please first analyze the colors, perspective, and
+proportions in the image and then recreate a sort of approximation from
+shapes. it should be recognizable, with as many details as you can
+recreate - but with simple svg shapes. Build it as 8-10 color layers
+ordered back to front.
+
+Output the result as a complete SVG element with viewBox="0 0 W H".
+Wrap each color layer in a <g id="layer-name"> tag.
+```
+
+### Key Learnings (Prompt Engineering)
+
+- **Simple > Complex**: The conversational prompt produces dramatically better results than structured prompts with bounding boxes, material ontologies, or CoT analysis blocks
+- **Raw SVG > JSON**: Letting Gemini output raw SVG markup instead of JSON `{ type, attrs }` format removes overhead and produces more expressive paths
+- **No thinking cap**: Removing `thinkingBudget` limits lets the model reason freely
+- **Temperature 0.8**: Higher temperature gives more creative, expressive output
+- **Image size**: Sending 2000px max (was 1200px) preserves more detail for the model
+- **Gemini 3 Flash**: Significantly better multimodal understanding than 2.5 Flash
+
+## Features
+
+### SVG Viewer
+- Layer toggle (show/hide individual layers)
+- Step-through navigation (Previous/Next)
+- Outline mode (wireframe view)
 - Watercolor FX filters (feTurbulence, feGaussianBlur, feDisplacementMap)
 - Save as PNG/JPG at 2x resolution
+- Grid overlay with cell magnification
+- Distance measurement tool (scaled to A5/A6 paper)
 
-## Git Tags
+### Grid Overlay (NEW)
+- Toggle grid on/off for both Pointillist and AI Composition views
+- Configurable columns (3/4/6/8), rows auto-calculated from aspect ratio
+- Cell labels (A1, A2, B1, B2...) at each cell corner
+- Click a cell to open magnification overlay showing zoomed content + color swatches
+- Measure mode: plot points, see distances in mm scaled to paper size (A5/A6)
 
-- `v-best-puddle-result` — The commit that produced the best puddle reflection output
+### Pointillist
+- 10-round mark generation with grid focus and zoom
+- Photo overlay toggle
+- Grid overlay with measurement (shared GridOverlay component)
+
+## Git Tags (Prompt Evolution)
+
+- `v-cubist-baroque` — Original two-call Draftsman/Painter with complex ontology
+- `v-cot-spatial` — Single-call Chain of Thought with spatial data injection
+- `v-two-call-analyst` — Two-call with Analyst bounding boxes → Painter
+- `v-simple-natural` — Single-call conversational prompt (breakthrough)
+- `v-convo-2step` — Conversational two-step multi-turn
+- `v-bare-prompt` — Stripped to bare essentials (best balance)
+- `v-single-recognizable` — Added "recognizable + details" phrasing
+- `v-no-think-cap` — Removed thinking budget, raised temperature
+- `v-orientation` — Added portrait/landscape hint
+- `v-gemini3-flash` — Switched to gemini-3-flash-preview
+- `v-raw-svg-parser` — Raw SVG output + DOMParser (current architecture)
+- `v-grid-overlay` — Grid overlay, cell magnification, distance measurement
 
 ## Environment
 
 - **Dev server:** `npx vite --port 5182` or use preview server
 - **Gemini key:** `.env.local` with `VITE_GEMINI_KEY=AIza...`
-- **Build:** `npx vite build` (clean, ~26 modules, ~80KB gzipped)
-- **Deploy target:** Vercel (static + optional serverless for Claude API)
+- **Build:** `npx vite build`
+- **CLI testing:** `node test-prompt.mjs --tag NAME [--image PATH]`
+- **Deploy target:** Vercel (static + optional serverless)
 
-## Next Steps (Suggested Priority)
+## Known Issues / Next Steps
 
-1. **Stabilize SVG quality** — the biggest bang-for-buck improvement
-2. **Test with diverse photos** — portraits, still life, landscapes without buildings
-3. **Consider gemini-2.5-pro** for higher quality at higher cost
-4. **Improve reflection detection** in analyzeImage.js
-5. **Add more example photos** to the upload page for testing
+1. **Prompt consistency** — Output quality varies between runs (non-deterministic)
+2. **Raw SVG parsing** — Some edge cases in the parser (nested groups, style attrs)
+3. **Grid on Pointillist** — Grid lines render but cell magnification doesn't work (no composition object for canvas)
+4. **Reflection detection** — `analyzeImage.js` still misses puddle reflections
+5. **Test with diverse photos** — Flowers, portraits, landscapes without buildings
