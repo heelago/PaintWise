@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { GridLines, GridControls, CellMagnifier } from './GridOverlay';
 
 // ── Style constants (matching PaintingPage dark theme) ────────────
 const BG      = '#1E1C1A';
@@ -80,6 +81,12 @@ export default function SvgViewer({ composition }) {
   const [outlineMode, setOutlineMode] = useState(false);
   const [freeToggle, setFreeToggle] = useState(false);
   const [watercolorFx, setWatercolorFx] = useState(false);
+  const [gridOn, setGridOn] = useState(false);
+  const [gridCols, setGridCols] = useState(4);
+  const [measureMode, setMeasureMode] = useState(false);
+  const [paperSize, setPaperSize] = useState('a5');
+  const [plotPoints, setPlotPoints] = useState([]);
+  const [selectedCell, setSelectedCell] = useState(null);
   const svgRef = useRef(null);
 
   const saveAsImage = useCallback((format = 'png') => {
@@ -223,6 +230,19 @@ export default function SvgViewer({ composition }) {
               </g>
             );
           })}
+
+          {/* Grid overlay */}
+          {gridOn && (
+            <GridLines
+              viewBox={viewBox}
+              cols={gridCols}
+              onCellClick={measureMode ? null : setSelectedCell}
+              measureMode={measureMode}
+              plotPoints={plotPoints}
+              onPlotPoint={(pt) => setPlotPoints(prev => [...prev, pt])}
+              paperSize={paperSize}
+            />
+          )}
         </svg>
       </div>
 
@@ -255,6 +275,18 @@ export default function SvgViewer({ composition }) {
           <Spacer />
           <CtrlBtn onClick={() => saveAsImage('png')} label="Save PNG" />
           <CtrlBtn onClick={() => saveAsImage('jpg')} label="Save JPG" />
+          <Spacer />
+          <GridControls
+            gridOn={gridOn}
+            onToggleGrid={() => { setGridOn(g => !g); setMeasureMode(false); setPlotPoints([]); setSelectedCell(null); }}
+            cols={gridCols}
+            onChangeCols={setGridCols}
+            measureMode={measureMode}
+            onToggleMeasure={() => { setMeasureMode(m => !m); setPlotPoints([]); }}
+            paperSize={paperSize}
+            onChangePaper={setPaperSize}
+            onClearPoints={() => setPlotPoints([])}
+          />
         </div>
 
         {/* Progress dots */}
@@ -381,6 +413,13 @@ export default function SvgViewer({ composition }) {
           );
         })}
       </div>
+
+      {/* Cell magnification overlay */}
+      <CellMagnifier
+        composition={composition}
+        cell={selectedCell}
+        onClose={() => setSelectedCell(null)}
+      />
     </div>
   );
 }

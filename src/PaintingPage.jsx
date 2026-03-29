@@ -4,6 +4,7 @@ import { findNearestPigment, suggestMix } from './engine/pigments';
 import { generateInstructions } from './engine/instructions';
 import { generateGeminiSvg } from './engine/geminiSvg';
 import SvgViewer from './SvgViewer';
+import { GridLines, GridControls, CellMagnifier } from './GridOverlay';
 
 // ── Style constants (shared dark theme) ──────────────────────────
 const BG       = '#1E1C1A';
@@ -75,6 +76,14 @@ export default function PaintingPage({ imageData, image, onBack }) {
   const [aiWarnings, setAiWarnings] = useState([]);
   const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('paintwise-gemini-key') || import.meta.env.VITE_GEMINI_KEY || '');
   const [forceReflection, setForceReflection] = useState(false);
+
+  // Grid overlay state (for Pointillist view)
+  const [ptGridOn, setPtGridOn] = useState(false);
+  const [ptGridCols, setPtGridCols] = useState(4);
+  const [ptMeasureMode, setPtMeasureMode] = useState(false);
+  const [ptPaperSize, setPtPaperSize] = useState('a5');
+  const [ptPlotPoints, setPtPlotPoints] = useState([]);
+  const [ptSelectedCell, setPtSelectedCell] = useState(null);
 
   const instructions = useMemo(() => {
     if (!analysis) return [];
@@ -517,15 +526,47 @@ export default function PaintingPage({ imageData, image, onBack }) {
                     }}
                   />
                 )}
+                {ptGridOn && (
+                  <svg
+                    viewBox={`0 0 ${canvasW} ${canvasH}`}
+                    style={{
+                      position: 'absolute',
+                      top: 0, left: 0,
+                      width: '100%', height: '100%',
+                      borderRadius: 8,
+                    }}
+                  >
+                    <GridLines
+                      viewBox={`0 0 ${canvasW} ${canvasH}`}
+                      cols={ptGridCols}
+                      onCellClick={ptMeasureMode ? null : setPtSelectedCell}
+                      measureMode={ptMeasureMode}
+                      plotPoints={ptPlotPoints}
+                      onPlotPoint={(pt) => setPtPlotPoints(prev => [...prev, pt])}
+                      paperSize={ptPaperSize}
+                    />
+                  </svg>
+                )}
               </div>
               <div style={{
-                display: 'flex', gap: 12, marginTop: 16,
+                display: 'flex', gap: 8, marginTop: 16,
                 flexWrap: 'wrap', justifyContent: 'center',
               }}>
                 <ControlButton
                   active={showPhoto}
                   onClick={() => setShowPhoto((p) => !p)}
                   label={showPhoto ? 'Hide Photo' : 'Show Photo'}
+                />
+                <GridControls
+                  gridOn={ptGridOn}
+                  onToggleGrid={() => { setPtGridOn(g => !g); setPtMeasureMode(false); setPtPlotPoints([]); setPtSelectedCell(null); }}
+                  cols={ptGridCols}
+                  onChangeCols={setPtGridCols}
+                  measureMode={ptMeasureMode}
+                  onToggleMeasure={() => { setPtMeasureMode(m => !m); setPtPlotPoints([]); }}
+                  paperSize={ptPaperSize}
+                  onChangePaper={setPtPaperSize}
+                  onClearPoints={() => setPtPlotPoints([])}
                 />
               </div>
             </>
