@@ -175,7 +175,7 @@ export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, opti
   const imageBase64 = await resizeImageToBase64(imageSrc);
 
   // Build request
-  const model = options.model || 'gemini-2.0-flash';
+  const model = options.model || 'gemini-2.5-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
   const prompt = buildPrompt(analysisMetadata);
