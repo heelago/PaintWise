@@ -29,19 +29,18 @@ function imageToBase64(path) {
   return readFileSync(path).toString('base64');
 }
 
-async function callGemini(parts, { maxTokens = 65536, systemInstruction = null } = {}) {
+async function callGemini(contents, { maxTokens = 65536 } = {}) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+  // Support both single-turn (array of parts) and multi-turn (array of {role, parts})
+  const isMultiTurn = contents[0]?.role != null;
   const body = {
-    contents: [{ parts }],
+    contents: isMultiTurn ? contents : [{ parts: contents }],
     generationConfig: {
       temperature: 0.4,
       maxOutputTokens: maxTokens,
       thinkingConfig: { thinkingBudget: 1024 },
     },
   };
-  if (systemInstruction) {
-    body.systemInstruction = { parts: [{ text: systemInstruction }] };
-  }
 
   const t0 = Date.now();
   const res = await fetch(url, {
