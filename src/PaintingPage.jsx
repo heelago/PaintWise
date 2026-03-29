@@ -69,10 +69,13 @@ export default function PaintingPage({ imageData, image, onBack }) {
 
   // AI SVG state
   const [aiComposition, setAiComposition] = useState(null);
+  const [aiInventory, setAiInventory] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiStep, setAiStep] = useState(''); // progress label
   const [aiError, setAiError] = useState(null);
   const [aiWarnings, setAiWarnings] = useState([]);
   const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('paintwise-gemini-key') || '');
+  const [forceReflection, setForceReflection] = useState(false);
 
   // Derived data (computed once when analysis is ready)
   const svgComposition = useMemo(() => {
@@ -92,7 +95,7 @@ export default function PaintingPage({ imageData, image, onBack }) {
     return generateInstructions(analysis, ROUND_CONFIGS);
   }, [analysis]);
 
-  // ── AI SVG generation (Gemini BYOK) ──────────────────────────
+  // ── AI SVG generation (Gemini two-call pipeline) ─────────────
   const triggerAiGeneration = useCallback(async (force = false) => {
     if (aiLoading) return;
     if (aiComposition && !force) return;
@@ -100,11 +103,11 @@ export default function PaintingPage({ imageData, image, onBack }) {
       setAiError('Please enter your Gemini API key above');
       return;
     }
-    // Persist key for convenience
     localStorage.setItem('paintwise-gemini-key', geminiKey.trim());
     setAiLoading(true);
     setAiError(null);
     setAiWarnings([]);
+    setAiStep('Preparing...');
     try {
       const metadata = {
         width: imageData.width,
@@ -113,18 +116,23 @@ export default function PaintingPage({ imageData, image, onBack }) {
         regionBounds: analysis.regionBounds,
         horizonY: analysis.horizonY,
         hasHorizon: analysis.hasHorizon,
-        hasReflection: analysis.hasReflection,
+        hasReflection: forceReflection || analysis.hasReflection,
         sceneAvgColor: analysis.sceneAvgColor,
       };
-      const { composition, warnings } = await generateGeminiSvg(
-        geminiKey.trim(), image.src, metadata, { force }
+      const { composition, warnings, inventory } = await generateGeminiSvg(
+        geminiKey.trim(), image.src, metadata, {
+          force,
+          onProgress: ({ label }) => setAiStep(label),
+        }
       );
       setAiComposition(composition);
+      setAiInventory(inventory);
       setAiWarnings(warnings || []);
     } catch (err) {
       setAiError(err.message || 'AI generation failed');
     } finally {
       setAiLoading(false);
+      setAiStep('');
     }
   }, [aiLoading, aiComposition, geminiKey, imageData, analysis, image]);
 
@@ -544,45 +552,66 @@ export default function PaintingPage({ imageData, image, onBack }) {
             svgComposition && <SvgViewer composition={svgComposition} />
           ) : viewStyle === 'ai-svg' ? (
             <div style={{ width: '100%', maxWidth: 800 }}>
-              {/* API Key input */}
+              {/* API Key input + options */}
               {!aiComposition && (
-                <div style={{
-                  display: 'flex', gap: 10, alignItems: 'center',
-                  marginBottom: 20, padding: '12px 16px',
-                  background: 'rgba(232,228,223,0.03)',
-                  border: '1px solid rgba(198,154,92,0.12)',
-                  borderRadius: 8,
-                }}>
-                  <label style={{ fontFamily: BODY, fontSize: 13, color: MUTED, whiteSpace: 'nowrap' }}>
-                    Gemini API Key:
-                  </label>
-                  <input
-                    type="password"
-                    value={geminiKey}
-                    onChange={e => setGeminiKey(e.target.value)}
-                    placeholder="AIza..."
-                    style={{
-                      flex: 1, padding: '6px 10px', borderRadius: 5,
-                      border: '1px solid rgba(198,154,92,0.2)',
-                      background: 'rgba(0,0,0,0.3)', color: TEXT,
-                      fontFamily: BODY, fontSize: 14, outline: 'none',
-                    }}
-                  />
-                  <ControlButton
-                    active={true}
-                    onClick={() => triggerAiGeneration(false)}
-                    label="Generate"
-                  />
-                </div>
+                <>
+                  <div style={{
+                    display: 'flex', gap: 10, alignItems: 'center',
+                    marginBottom: 8, padding: '12px 16px',
+                    background: 'rgba(232,228,223,0.03)',
+                    border: '1px solid rgba(198,154,92,0.12)',
+                    borderRadius: 8,
+                  }}>
+                    <label style={{ fontFamily: BODY, fontSize: 13, color: MUTED, whiteSpace: 'nowrap' }}>
+                      Gemini API Key:
+                    </label>
+                    <input
+                      type="password"
+                      value={geminiKey}
+                      onChange={e => setGeminiKey(e.target.value)}
+                      placeholder="AIza..."
+                      style={{
+                        flex: 1, padding: '6px 10px', borderRadius: 5,
+                        border: '1px solid rgba(198,154,92,0.2)',
+                        background: 'rgba(0,0,0,0.3)', color: TEXT,
+                        fontFamily: BODY, fontSize: 14, outline: 'none',
+                      }}
+                    />
+                    <ControlButton
+                      active={true}
+                      onClick={() => triggerAiGeneration(false)}
+                      label="Generate"
+                    />
+                  </div>
+                  <div style={{
+                    display: 'flex', gap: 16, alignItems: 'center',
+                    marginBottom: 16, padding: '0 16px',
+                  }}>
+                    <label style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      fontFamily: BODY, fontSize: 13, color: MUTED, cursor: 'pointer',
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={forceReflection}
+                        onChange={e => setForceReflection(e.target.checked)}
+                        style={{ accentColor: ACCENT }}
+                      />
+                      This photo has a reflection (puddle, water, glass)
+                    </label>
+                  </div>
+                </>
               )}
 
               {aiLoading ? (
                 <div style={{ textAlign: 'center', padding: 60 }}>
                   <p style={{ fontFamily: BODY, fontSize: 20, color: TEXT, marginBottom: 12 }}>
-                    Studying your photo...
+                    {aiStep || 'Working...'}
                   </p>
                   <p style={{ fontFamily: BODY, fontSize: 14, color: MUTED }}>
-                    Gemini is analyzing the scene and building a composition
+                    {aiStep.includes('Analyzing') ? 'Step 1/2 — Studying every element in the scene' :
+                     aiStep.includes('Building') ? 'Step 2/2 — Converting analysis to SVG layers' :
+                     'Preparing image for AI analysis'}
                   </p>
                   <div style={{
                     width: 200, height: 4, borderRadius: 2, margin: '24px auto',
