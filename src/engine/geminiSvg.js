@@ -192,7 +192,7 @@ function buildPrompt(metadata) {
   const vbW = 1000;
   const vbH = Math.round(1000 / ratio);
 
-  return `Hey buddy, can you help me deconstruct this photo into a buildable image made of svg layers of each color for a painting tutorial app im working on? please first analyze the colors, perspective, and proportions in the image and then recreate a sort of approximation from shapes. it should be recognizable, with as many details as you can recreate - but with simple svg shapes. Build it as 8-10 color layers ordered back to front.
+  return `Hey buddy, can you help me deconstruct this photo into a buildable image made of svg layers of each color for a painting tutorial app im working on? please first analyze the colors, perspective, and proportions in the image and then recreate a sort of approximation from shapes. it should be recognizable, with as many details as you can recreate - but with simple svg shapes. pay attention to shading and colors. proportions need to make sense, if something is small in the image, it should be as small in the reproduction, its fine for some detail to be lost in this process, though we aim to keep the image as recognizable as possible. Build it as 8-10 color layers ordered back to front.
 
 Output the result as JSON matching this schema (no markdown fences, no extra text after the JSON):
 {
