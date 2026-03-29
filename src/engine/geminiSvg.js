@@ -67,25 +67,36 @@ function extractJson(text) {
   // Direct parse
   try { return JSON.parse(text); } catch { /* */ }
 
-  // Strip markdown fences
-  const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  // Strip markdown fences (complete or truncated)
+  let cleaned = text;
+  // Complete fence
+  const fence = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (fence) {
     try { return JSON.parse(fence[1].trim()); } catch { /* */ }
+    cleaned = fence[1].trim();
+  } else {
+    // Opening fence without closing (truncated)
+    const openFence = cleaned.match(/```(?:json)?\s*([\s\S]*)/);
+    if (openFence) {
+      cleaned = openFence[1].trim();
+    }
   }
 
   // Find outermost braces
-  const start = text.indexOf('{');
+  const start = cleaned.indexOf('{');
   if (start < 0) return null;
-  const end = text.lastIndexOf('}');
+  const end = cleaned.lastIndexOf('}');
   if (end > start) {
-    try { return JSON.parse(text.slice(start, end + 1)); } catch { /* */ }
+    try { return JSON.parse(cleaned.slice(start, end + 1)); } catch { /* */ }
   }
 
   // Repair truncated JSON
-  let json = text.slice(start);
-  json = json.replace(/,\s*"[^"]*$/, '');
-  json = json.replace(/,\s*$/, '');
-  json = json.replace(/:\s*"[^"]*$/, ': ""');
+  let json = cleaned.slice(start);
+  // Clean up trailing partial values
+  json = json.replace(/,\s*"[^"]*$/, '');       // trailing key without value
+  json = json.replace(/,\s*$/, '');              // trailing comma
+  json = json.replace(/:\s*"[^"]*$/, ': ""');    // cut mid-string value
+  json = json.replace(/:\s*$/, ': null');         // cut after colon
 
   let braces = 0, brackets = 0, inStr = false, esc = false;
   for (const ch of json) {
@@ -120,7 +131,12 @@ async function callGemini(apiKey, model, parts, maxTokens = 65536) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ parts }],
-      generationConfig: { temperature: 0.3, maxOutputTokens: maxTokens },
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: maxTokens,
+        // Limit thinking tokens so they don't eat the output budget
+        thinkingConfig: { thinkingBudget: 2048 },
+      },
     }),
   });
 
@@ -262,7 +278,7 @@ async function analyzeScene(apiKey, imageBase64, model, metadata) {
   const text = await callGemini(apiKey, model, [
     { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
     { text: fullPrompt },
-  ], 32768);
+  ], 65536);
 
   const inventory = extractJson(text);
   if (!inventory) {
