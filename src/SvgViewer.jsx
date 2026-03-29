@@ -76,6 +76,7 @@ export default function SvgViewer({ composition }) {
   const [activeStep, setActiveStep] = useState(layerCount - 1);
   const [outlineMode, setOutlineMode] = useState(false);
   const [freeToggle, setFreeToggle] = useState(false);
+  const [watercolorFx, setWatercolorFx] = useState(false);
   const svgRef = useRef(null);
 
   const saveAsImage = useCallback((format = 'png') => {
@@ -176,21 +177,49 @@ export default function SvgViewer({ composition }) {
           xmlns="http://www.w3.org/2000/svg"
           style={{ width: '100%', height: 'auto', display: 'block' }}
         >
-          {/* Defs block */}
-          {allDefs && (
-            <defs dangerouslySetInnerHTML={{ __html: allDefs }} />
-          )}
+          {/* Defs block — gradients from AI + watercolor filters */}
+          <defs>
+            {allDefs && <g dangerouslySetInnerHTML={{ __html: allDefs }} />}
+
+            {/* Watercolor paper texture filter */}
+            <filter id="wc-paper" x="-5%" y="-5%" width="110%" height="110%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" seed="2" result="noise" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" result="displaced" />
+              <feGaussianBlur in="displaced" stdDeviation="0.5" />
+            </filter>
+
+            {/* Soft edge bleed for washes */}
+            <filter id="wc-wash" x="-2%" y="-2%" width="104%" height="104%">
+              <feGaussianBlur stdDeviation="1.5" />
+            </filter>
+
+            {/* Subtle edge wobble for hard geometry */}
+            <filter id="wc-edge" x="-2%" y="-2%" width="104%" height="104%">
+              <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="2" seed="7" result="noise" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+          </defs>
 
           {/* Layers */}
-          {layers.map((layer, li) => (
-            <g
-              key={layer.id}
-              opacity={visibleLayers[li] ? 1 : 0}
-              style={{ transition: 'opacity 0.3s ease' }}
-            >
-              {layer.elements.map((el, ei) => renderElement(el, ei, outlineMode))}
-            </g>
-          ))}
+          {layers.map((layer, li) => {
+            // Apply watercolor filters based on layer position
+            let filter = undefined;
+            if (watercolorFx && !outlineMode) {
+              if (li === 0) filter = 'url(#wc-wash)';      // base washes get soft bleed
+              else if (li < layers.length - 1) filter = 'url(#wc-paper)'; // mid layers get paper texture
+              // last layer (details) stays crisp
+            }
+            return (
+              <g
+                key={layer.id}
+                opacity={visibleLayers[li] ? 1 : 0}
+                filter={filter}
+                style={{ transition: 'opacity 0.3s ease' }}
+              >
+                {layer.elements.map((el, ei) => renderElement(el, ei, outlineMode))}
+              </g>
+            );
+          })}
         </svg>
       </div>
 
@@ -214,6 +243,11 @@ export default function SvgViewer({ composition }) {
             onClick={() => setOutlineMode((m) => !m)}
             active={outlineMode}
             label={outlineMode ? 'Filled' : 'Outline'}
+          />
+          <CtrlBtn
+            onClick={() => setWatercolorFx((f) => !f)}
+            active={watercolorFx}
+            label={watercolorFx ? 'FX On' : 'FX Off'}
           />
           <Spacer />
           <CtrlBtn onClick={() => saveAsImage('png')} label="Save PNG" />

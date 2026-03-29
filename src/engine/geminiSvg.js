@@ -321,11 +321,12 @@ async function analyzeScene(apiKey, imageBase64, model, metadata) {
   return inventory;
 }
 
-// ── Call 2: The "Painter" — SVG with Watercolor Physics ─────────────
+// ── Call 2: The "Painter" — Digital Cubist/Baroque Vector Abstraction ──
 //
-// BEST VERSION (tagged v-best-painter). Produces the highest quality output.
-// Uses specific SVG technique instructions with examples.
-// Procedural cloud stacking, jagged horizon, reflection math.
+// Style: precise, polished, computational deconstruction.
+// Architecture = pristine geometry. Clouds = sweeping baroque curves.
+// Texture = abstract geometric primitives. Reflections = mathematical.
+// NO jitter, NO messiness, NO hand-painted sloppiness.
 
 function buildPainterPrompt(inventory) {
   let vbW = 800, vbH = 600;
@@ -337,7 +338,7 @@ function buildPainterPrompt(inventory) {
   const hY = Math.round(hPercent / 100 * vbH);
   const hasRefl = inventory.reflection?.present === true;
 
-  return `You are an SVG engineer creating a watercolor painting study. Study the structural data and the photograph. Render EVERY element the Draftsman identified using clean geometric forms, procedural layered opacity for organic shapes, and mathematical transforms for reflections.
+  return `You are a computational SVG artist creating a PRECISE VECTOR ABSTRACTION of a photograph. The style is "Digital Cubist/Baroque" — pristine geometry for hard forms, sweeping elegant curves for organic forms, mathematical symmetry for reflections. Every shape must be CLEAN and POLISHED. No jitter, no messiness, no hand-painted sloppiness.
 
 STRUCTURAL DATA:
 ${JSON.stringify(inventory, null, 2)}
@@ -347,65 +348,81 @@ HORIZON Y: ${hY}px (${hPercent}% from top)
 HAS REFLECTION: ${hasRefl}
 Coords: x_px = percent/100 * ${vbW}, y_px = percent/100 * ${vbH}
 
-Return ONLY valid JSON. No markdown fences. All numeric values must be COMPUTED NUMBERS, not math expressions.
+Return ONLY valid JSON. No markdown fences. All numeric values must be COMPUTED NUMBERS, not expressions.
 { "viewBox": "0 0 ${vbW} ${vbH}", "layers": [{ "id": "string", "name": "string", "description": "string", "paintingTip": "string", "elements": [{ "type": "rect|path|circle|ellipse|line|defs", "attrs": {} }] }] }
+
+=== AESTHETIC RULES (strictly enforced) ===
+
+1. PRISTINE GEOMETRY for hard forms:
+   Architecture, vehicles, poles, objects = mathematically precise <rect>, <polygon>, <line>.
+   NO wobble, NO jitter. Perfectly crisp edges.
+   Create depth by OVERLAYING translucent geometric blocks:
+   - Base shadow <rect> (dark, opacity 0.7-0.9)
+   - Lit face <rect> on top (warm color, opacity 0.8-1.0)
+   - Shadow face <rect> offset (cool/dark, opacity 0.5-0.7)
+   Windows/details as small dark <rect> elements with varied sizes.
+
+2. BAROQUE SWEEPING CURVES for soft forms:
+   Clouds, foliage, water, organic shapes = massive, ELEGANT Bezier curves.
+   NOT lumpy or bumpy — SMOOTH, sweeping ribbons of color.
+   Use Quadratic (Q) and Cubic (C) curves with long, flowing control points:
+   "M0,200 Q150,100 300,180 T500,150 Q600,200 ${vbW},160 L${vbW},280 Q400,300 200,270 T0,290 Z"
+   Stack 4-8 overlapping shapes per volume with opacities 0.3 to 0.85.
+   Layer: shadow ribbons → midtone ribbons → highlight circles.
+   <circle> elements for the brightest highlight spots (opacity 0.8-0.9).
+
+3. ABSTRACT GEOMETRIC TEXTURE:
+   NO literal dirt or messy brushstrokes.
+   Texture = perfectly round translucent <circle> elements scattered procedurally.
+   Surface tracks = thick <path> strokes with strict strokeDasharray patterns:
+   fill="none", stroke=color, strokeWidth=30-50, strokeDasharray="8,20,15,12", opacity 0.2-0.35
+
+4. MATHEMATICAL REFLECTION (if present):
+   ${hasRefl ? `The reflection axis at y=${hY} must be a FLAWLESS horizontal cut.
+   For each real element, create a mirrored copy:
+   - reflected_height = real_height × 0.85
+   - reflected_y mirrored across ${hY}
+   - Color darkened (RGB × 0.80)
+   - Opacity reduced by 0.15
+   Overlay a dark translucent <rect> across the reflected half to visually
+   distinguish water/ground from sky. The mirrored geometry sits UNDER this overlay.
+   Reflected clouds: same sweeping curves, darker, lower opacity.` : 'No reflection in this scene.'}
 
 === LAYER STRUCTURE (4-7 layers, lightest to darkest) ===
 
 Layer 1: "Base Washes"
-  Gradient rects for the major color zones identified in the structural data.
-  If there's a horizon, use SEPARATE gradient rects for each zone.
-  Gradients go in defs elements with "content" string.
-  Example defs: {"type":"defs","content":"<linearGradient id=\\"skyA\\" x1=\\"0%\\" y1=\\"0%\\" x2=\\"0%\\" y2=\\"100%\\"><stop offset=\\"0%\\" stop-color=\\"#5d85a6\\"/><stop offset=\\"100%\\" stop-color=\\"#d69c7a\\"/></linearGradient>"}
-  Example rect: {"type":"rect","attrs":{"x":0,"y":${hY},"width":${vbW},"height":${vbH - hY},"fill":"url(#skyA)"}}
+  Gradient rects for major color zones. SEPARATE gradients per zone.
+  Defs example: {"type":"defs","content":"<linearGradient id=\\"g1\\" x1=\\"0%\\" y1=\\"0%\\" x2=\\"0%\\" y2=\\"100%\\"><stop offset=\\"0%\\" stop-color=\\"#5d85a6\\"/><stop offset=\\"100%\\" stop-color=\\"#d69c7a\\"/></linearGradient>"}
 
-Layer 2: "Soft Volumes" (clouds, water ripples, foliage, organic forms — whatever the Draftsman found)
-  === PROCEDURAL STACKING ===
-  Do NOT draw one giant path per volume. Each mass must be built by stacking
-  5-10 SMALLER overlapping <path> elements with VARYING opacities:
-    - 2-3 large shadow shapes (cool dark color, opacity 0.2-0.4)
-    - 2-3 midtone shapes (warm color, opacity 0.4-0.6)
-    - 2-3 highlight shapes (near-white, opacity 0.6-0.9)
-    - 1-2 <circle> elements for the brightest highlights (opacity 0.8-0.9)
-  Use Cubic Bezier (C/S) curves with LUMPY edges:
-    "M100,200 C130,150 180,140 220,170 S290,200 320,180 C350,160 380,190 400,200 L400,250 C300,260 200,255 100,250 Z"
-  This stacking creates the wet-on-wet watercolor bleed effect.
-  If reflection exists: include reflected versions (darker, lower opacity) on the other side.
+Layer 2: "Soft Volumes"
+  Baroque sweeping curves (rule #2 above). Stack shadow→midtone→highlight.
+  ${hasRefl ? 'Include reflected soft volumes (darker, lower opacity) on the other side of the horizon.' : ''}
 
-Layer 3: "Hard Geometry" (architecture, vehicles, objects — whatever rigid forms the Draftsman found)
-  a) ONE dark shadow <rect> behind the group as a depth base.
-  b) Individual elements as CLEAN <rect> elements on top, positioned from the inventory bounds.
-  c) Sub-details (windows, markings) as small dark <rect> elements.
-  d) If a horizon_silhouette was identified, render it as a jagged <path>.
+Layer 3: "Hard Geometry"
+  Pristine cubist geometry (rule #1 above). Render from the Draftsman inventory.
+  ${hasRefl ? 'Include reflected hard geometry (rule #4).' : ''}
 
-${hasRefl ? `Layer 4: "Reflection"
-  For EVERY element above the horizon, create a mirrored copy:
-  - reflected_height = real_height × 0.85
-  - reflected_y = horizon_y ± (distance from horizon × 0.85)
-  - Color darkened by multiplying RGB by 0.80
-  - Opacity reduced by 0.15 from the real element
-  Overlay "Surface Texture" ON TOP of the reflection.
-
-` : ''}Layer ${hasRefl ? 5 : 4}: "Surface Texture"
-  For textured surfaces identified by the Draftsman:
-  a) Dark <path> wash (opacity 0.4-0.6)
-  b) 2-4 sweeping <path> strokes: fill="none", stroke=dark_color,
-     strokeWidth=40-60, strokeDasharray="5,15,20,10", opacity 0.2-0.4
-  c) 5-10 small <circle> grit dots (r=1-3)
+${hasRefl ? `Layer 4: "Reflection Overlay"
+  A dark translucent <rect> over the reflected zone (opacity 0.15-0.3).
+  Surface texture tracks on top (rule #3).
+` : ''}
+Layer ${hasRefl ? 5 : 4}: "Surface Texture"
+  Abstract geometric texture (rule #3). Dasharray paths + scattered circles.
 
 Layer ${hasRefl ? 6 : 5}: "Focal Details"
-  The darkest marks (last in watercolor — least water).
-  Render EVERY focal_detail from the inventory using appropriate primitives.
+  Darkest, crispest marks. Render EVERY focal_detail from the inventory.
+  Poles: thin <rect> or <line>. Birds: <path> v-shapes. Text: small <rect> blocks.
   Opacity 0.7-0.95.
-${hasRefl ? `  Include reflected versions of each detail.` : ''}
+  ${hasRefl ? 'Include reflected versions.' : ''}
 
-=== RULES ===
+=== TECHNICAL RULES ===
 1. RENDER EVERY ELEMENT from the structural data. Do not skip anything.
 2. ALL attrs camelCase: strokeWidth, strokeDasharray, strokeLinecap.
 3. COLORS: ONLY from palette. May darken (×0.80) or lighten (×1.15).
-4. ATMOSPHERIC DEPTH: far=low opacity (0.3-0.5), near=high opacity (0.7-0.95).
-5. PAINTING TIPS: Name pigments, brush sizes, techniques.
-6. All numeric values must be COMPUTED NUMBERS (e.g. 372, not "372 + 50 * 0.85").`;
+4. ATMOSPHERIC DEPTH: far elements = lower opacity, near elements = higher opacity.
+5. PAINTING TIPS: Name watercolor pigments, brush sizes, techniques.
+6. All numeric values must be COMPUTED NUMBERS (e.g. 372, not "372 + 50 * 0.85").
+7. The output should look like a polished digital study that a graphic designer would create.`;
 }
 
 async function generateSvgFromInventory(apiKey, imageBase64, inventory, model) {
