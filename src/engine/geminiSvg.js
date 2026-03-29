@@ -381,17 +381,25 @@ Layer 3: "Hard Geometry" (architecture, rigid forms)
   Fill this path with a dark color (the shadow base extends through it).
 
 ${hasRefl ? `Layer 4: "Reflection"
-  === USE-TAG REFLECTION TECHNIQUE ===
-  Do NOT manually redraw every reflected element. Instead:
-  1. All "real" hard geometry elements from Layer 3 should work as the source.
-  2. Create a COPY of each real building rect, but with:
-     - reflected_height = real_height × 0.85
-     - reflected_y = horizon_y - reflected_height (for puddle above) or horizon_y + offset (for water below)
-     - Color darkened by multiplying RGB by 0.80
-     - Opacity reduced by 0.15 from the real element
-  3. The reflected clouds from Layer 2 should already be included there.
-  4. THEN overlay the "Surface Texture" layer ON TOP of the reflection to
-     ground it as a puddle/water surface.
+  For EVERY rect in Layer 3 (every building, every window), create a MIRRORED COPY:
+
+  REFLECTION FORMULA (horizon at y=${hY}):
+  If real rect: x=100, y=${hY}, width=80, height=60, fill="#c99871"
+  Then reflected: x=100, y=${hY - 51}, width=80, height=51, fill="#a17a5a", opacity=0.65
+  (height × 0.85 = 51, y = ${hY} - 51, color darkened 20%)
+
+  If real rect: x=300, y=${hY}, width=200, height=100, fill="#ebaa78"
+  Then reflected: x=300, y=${hY - 85}, width=200, height=85, fill="#bc8860", opacity=0.65
+
+  EVERY building gets its reflected twin. EVERY window gets its reflected twin.
+  The reflected rects must have DIFFERENT heights and y-positions than the real ones.
+  Do NOT just repeat the same y-coordinate — the reflected y is ABOVE the horizon.
+
+  Also include reflected versions of the pole (same x, mirrored y-extent) and
+  reflected cloud shapes (darker, lower opacity) from the soft volumes.
+
+  Add a THIN HORIZON LINE between real and reflected zones:
+  {"type":"rect","attrs":{"x":0,"y":${hY - 2},"width":${vbW},"height":4,"fill":"#202b36","opacity":0.8}}
 
 ` : ''}Layer ${hasRefl ? 5 : 4}: "Surface Texture"
   For textured surfaces (concrete, asphalt, wet ground), use:

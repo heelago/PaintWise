@@ -73,7 +73,7 @@ export default function PaintingPage({ imageData, image, onBack }) {
   const [aiStep, setAiStep] = useState(''); // progress label
   const [aiError, setAiError] = useState(null);
   const [aiWarnings, setAiWarnings] = useState([]);
-  const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('paintwise-gemini-key') || '');
+  const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem('paintwise-gemini-key') || import.meta.env.VITE_GEMINI_KEY || '');
   const [forceReflection, setForceReflection] = useState(false);
 
   const instructions = useMemo(() => {
