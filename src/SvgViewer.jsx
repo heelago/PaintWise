@@ -44,6 +44,8 @@ function renderElement(el, index, outlineMode) {
     case 'ellipse': return <ellipse key={key} {...attrs} />;
     case 'path':    return <path key={key} {...attrs} />;
     case 'line':    return <line key={key} {...attrs} />;
+    case 'polygon': return <polygon key={key} {...attrs} />;
+    case 'polyline': return <polyline key={key} {...attrs} />;
     case 'text':    return <text key={key} {...attrs}>{attrs.children || attrs.text || ''}</text>;
     case 'g':       return <g key={key} {...attrs}>{(el.children || []).map((c, ci) => renderElement(c, `${index}-${ci}`, outlineMode))}</g>;
     case 'use':     return <use key={key} {...attrs} />;

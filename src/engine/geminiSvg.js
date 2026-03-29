@@ -1,13 +1,10 @@
 /**
- * Single-call Chain-of-Thought SVG pipeline using Gemini BYOK.
+ * Single-call raw SVG pipeline using Gemini BYOK.
  *
- * The model first outputs an <Analysis> block (composition grid,
- * perspective notes, color extraction), then generates the layered
- * SVG JSON. This CoT approach forces spatial reasoning before code
- * generation, dramatically improving proportion and perspective.
- *
- * System instruction sets the art-teacher persona and rules.
- * User prompt includes image + palette + asks for Analysis then JSON.
+ * Ask Gemini to output raw SVG markup with <g> layer groups.
+ * Parse the SVG into our { viewBox, layers: [{ elements }] } format
+ * using DOMParser. This lets Gemini write natural SVG paths without
+ * JSON overhead, producing much higher quality output.
  */
 
 import { verifyComposition } from './verifyComposition.js';
@@ -50,101 +47,28 @@ function cacheRead(key) {
     const raw = localStorage.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (parsed?.v === 3) return parsed.data;
+    if (parsed?.v === 4) return parsed.data;
   } catch { /* ignore */ }
   return null;
 }
 
 function cacheWrite(key, data) {
-  try { localStorage.setItem(key, JSON.stringify({ v: 3, data })); }
+  try { localStorage.setItem(key, JSON.stringify({ v: 4, data })); }
   catch { /* full */ }
 }
 
-function extractJson(text) {
-  // Direct parse
-  try { return JSON.parse(text); } catch { /* */ }
+// ── Gemini API caller ─────────────────────────────────────────────
 
-  // Strip markdown fences (complete or truncated)
-  let cleaned = text.trim();
-  if (cleaned.startsWith('```')) {
-    cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '');
-    cleaned = cleaned.replace(/\n?```\s*$/, '');
-  }
-
-  // Evaluate math expressions in numeric JSON values
-  cleaned = cleaned.replace(/:\s*(\d[\d\s+\-*/().]*\d)\s*([,\n\r\}])/g, (match, expr, after) => {
-    try {
-      const val = Function('"use strict"; return (' + expr + ')')();
-      if (typeof val === 'number' && isFinite(val)) {
-        return ': ' + Math.round(val * 100) / 100 + after;
-      }
-    } catch { /* leave as is */ }
-    return match;
-  });
-
-  // Try parsing the cleaned text
-  try { return JSON.parse(cleaned); } catch { /* */ }
-
-  // Find outermost braces
-  const start = cleaned.indexOf('{');
-  if (start < 0) return null;
-  const end = cleaned.lastIndexOf('}');
-  if (end > start) {
-    try { return JSON.parse(cleaned.slice(start, end + 1)); } catch { /* */ }
-  }
-
-  // Repair truncated JSON
-  let json = cleaned.slice(start);
-  json = json.replace(/,\s*"[^"]*$/, '');
-  json = json.replace(/,\s*$/, '');
-  json = json.replace(/:\s*"[^"]*$/, ': ""');
-  json = json.replace(/:\s*$/, ': null');
-
-  let braces = 0, brackets = 0, inStr = false, esc = false;
-  for (const ch of json) {
-    if (esc) { esc = false; continue; }
-    if (ch === '\\') { esc = true; continue; }
-    if (ch === '"') { inStr = !inStr; continue; }
-    if (inStr) continue;
-    if (ch === '{') braces++;
-    if (ch === '}') braces--;
-    if (ch === '[') brackets++;
-    if (ch === ']') brackets--;
-  }
-  for (let i = 0; i < brackets; i++) json += ']';
-  for (let i = 0; i < braces; i++) json += '}';
-
-  try {
-    const result = JSON.parse(json);
-    console.warn('[PaintWise] Repaired truncated JSON');
-    return result;
-  } catch { /* */ }
-
-  return null;
-}
-
-// ── Gemini API caller (supports single-turn and multi-turn) ───────
-
-async function callGemini(apiKey, model, contents, { maxTokens = 65536, responseSchema = null } = {}) {
-  // contents can be:
-  //   - an array of parts (single turn): [{ text }, { inline_data }]
-  //   - an array of messages (multi-turn): [{ role, parts }, ...]
-  const isMultiTurn = contents[0]?.role != null;
-  const genConfig = {
-    temperature: 0.8,
-    maxOutputTokens: maxTokens,
-  };
-  // Structured output: force JSON response matching schema
-  if (responseSchema) {
-    genConfig.responseMimeType = 'application/json';
-    genConfig.responseSchema = responseSchema;
-  }
-  const body = {
-    contents: isMultiTurn ? contents : [{ parts: contents }],
-    generationConfig: genConfig,
-  };
-
+async function callGemini(apiKey, model, parts, { maxTokens = 65536 } = {}) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const body = {
+    contents: [{ parts }],
+    generationConfig: {
+      temperature: 0.8,
+      maxOutputTokens: maxTokens,
+    },
+  };
+
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -176,7 +100,7 @@ async function callGemini(apiKey, model, contents, { maxTokens = 65536, response
     throw new Error('Gemini blocked the response (safety filter)');
   }
   if (candidate.finishReason === 'MAX_TOKENS') {
-    console.warn('[PaintWise] Response truncated — will attempt repair');
+    console.warn('[PaintWise] Response truncated');
   }
 
   let text = '';
@@ -190,6 +114,162 @@ async function callGemini(apiKey, model, contents, { maxTokens = 65536, response
   return text;
 }
 
+// ── SVG Parser ────────────────────────────────────────────────────
+// Parse raw SVG markup into our { viewBox, layers } format.
+// Each <g> with an id becomes a layer. Child elements become
+// the layer's elements array.
+
+const SHAPE_TAGS = new Set(['rect', 'circle', 'ellipse', 'path', 'line', 'polygon', 'polyline']);
+const ATTR_CAMEL = { 'stroke-width': 'strokeWidth', 'stroke-dasharray': 'strokeDasharray',
+  'stroke-linecap': 'strokeLinecap', 'stroke-linejoin': 'strokeLinejoin',
+  'stroke-opacity': 'strokeOpacity', 'fill-opacity': 'fillOpacity',
+  'font-size': 'fontSize', 'font-family': 'fontFamily', 'text-anchor': 'textAnchor',
+  'clip-path': 'clipPath', 'stop-color': 'stopColor', 'stop-opacity': 'stopOpacity',
+  'flood-color': 'floodColor', 'flood-opacity': 'floodOpacity' };
+
+function parseAttrs(el) {
+  const attrs = {};
+  for (const attr of el.attributes) {
+    const name = ATTR_CAMEL[attr.name] || attr.name;
+    // Skip id/class/data-* — not needed for rendering
+    if (name === 'id' || name === 'class' || name.startsWith('data-')) continue;
+    // Try to parse numbers
+    const num = Number(attr.value);
+    attrs[name] = (attr.value !== '' && !isNaN(num) && String(num) === attr.value) ? num : attr.value;
+  }
+  return attrs;
+}
+
+function parseElement(el) {
+  const tag = el.tagName.toLowerCase();
+
+  if (tag === 'defs') {
+    return { type: 'defs', content: el.innerHTML };
+  }
+
+  if (SHAPE_TAGS.has(tag)) {
+    return { type: tag === 'polygon' || tag === 'polyline' ? 'path' : tag, attrs: parseAttrs(el) };
+  }
+
+  if (tag === 'text') {
+    const attrs = parseAttrs(el);
+    attrs.children = el.textContent;
+    return { type: 'text', attrs };
+  }
+
+  if (tag === 'use') {
+    return { type: 'use', attrs: parseAttrs(el) };
+  }
+
+  // For <g> without an id (nested groups), flatten children
+  if (tag === 'g') {
+    const children = [];
+    for (const child of el.children) {
+      const parsed = parseElement(child);
+      if (parsed) children.push(parsed);
+    }
+    if (children.length === 1) return children[0];
+    if (children.length > 0) return { type: 'g', attrs: parseAttrs(el), children };
+  }
+
+  return null;
+}
+
+function parseSvgToComposition(svgText) {
+  // Extract <svg> from response (might have analysis text before it)
+  const svgMatch = svgText.match(/<svg[\s\S]*<\/svg>/i);
+  if (!svgMatch) return null;
+
+  // Strip markdown fences
+  let svgMarkup = svgMatch[0]
+    .replace(/^```(?:svg|xml|html)?\s*\n?/, '')
+    .replace(/\n?```\s*$/, '');
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(svgMarkup, 'image/svg+xml');
+  const svg = doc.querySelector('svg');
+
+  if (!svg) {
+    console.error('[PaintWise] DOMParser failed to find <svg>');
+    return null;
+  }
+
+  const viewBox = svg.getAttribute('viewBox') || '0 0 1000 750';
+
+  const layers = [];
+  let layerIndex = 0;
+
+  for (const child of svg.children) {
+    const tag = child.tagName.toLowerCase();
+
+    // Top-level <defs> — add as elements in a hidden defs layer or attach to first layer
+    if (tag === 'defs') {
+      // We'll prepend defs to the first real layer later
+      if (layers.length === 0) {
+        layers.push({
+          id: 'defs',
+          name: 'Definitions',
+          description: 'Gradients and patterns',
+          paintingTip: '',
+          elements: [{ type: 'defs', content: child.innerHTML }],
+        });
+      } else {
+        layers[0].elements.unshift({ type: 'defs', content: child.innerHTML });
+      }
+      continue;
+    }
+
+    // <g> with id = a layer
+    if (tag === 'g') {
+      const id = child.getAttribute('id') || child.getAttribute('data-name') || `layer-${layerIndex}`;
+      const name = child.getAttribute('data-name') || child.getAttribute('id') || `Layer ${layerIndex + 1}`;
+      layerIndex++;
+
+      const elements = [];
+      for (const el of child.children) {
+        const parsed = parseElement(el);
+        if (parsed) elements.push(parsed);
+      }
+
+      if (elements.length > 0) {
+        layers.push({
+          id: id.replace(/\s+/g, '-').toLowerCase(),
+          name,
+          description: '',
+          paintingTip: '',
+          elements,
+        });
+      }
+      continue;
+    }
+
+    // Top-level shape (not in a group) — add to a catch-all layer
+    if (SHAPE_TAGS.has(tag) || tag === 'text' || tag === 'use') {
+      const parsed = parseElement(child);
+      if (parsed) {
+        // Find or create catch-all layer
+        let catchAll = layers.find(l => l.id === 'ungrouped');
+        if (!catchAll) {
+          catchAll = { id: 'ungrouped', name: 'Background', description: '', paintingTip: '', elements: [] };
+          layers.push(catchAll);
+        }
+        catchAll.elements.push(parsed);
+      }
+    }
+  }
+
+  if (layers.length === 0) return null;
+
+  console.log('[PaintWise] Parsed SVG:', {
+    viewBox,
+    layers: layers.length,
+    names: layers.map(l => l.name),
+    totalElements: layers.reduce((s, l) => s + l.elements.length, 0),
+  });
+
+  return { viewBox, layers };
+}
+
 // ── Prompt ────────────────────────────────────────────────────────
 
 function buildPrompt(metadata) {
@@ -201,30 +281,14 @@ function buildPrompt(metadata) {
 
   return `Hey buddy, can you help me deconstruct this ${orientation} photo into a buildable image made of svg layers of each color for a painting tutorial app im working on? please first analyze the colors, perspective, and proportions in the image and then recreate a sort of approximation from shapes. it should be recognizable, with as many details as you can recreate - but with simple svg shapes. Build it as 8-10 color layers ordered back to front.
 
-Output the result as JSON matching this schema (no markdown fences, no extra text after the JSON):
-{
-  "viewBox": "0 0 ${vbW} ${vbH}",
-  "layers": [
-    {
-      "id": "layer-id",
-      "name": "Layer Name",
-      "description": "what this layer represents",
-      "paintingTip": "watercolor technique tip naming pigments and brush sizes",
-      "elements": [
-        { "type": "rect|path|circle|ellipse|line|defs", "attrs": { ... } }
-      ]
-    }
-  ]
-}
-
-For gradients use: {"type":"defs","content":"<linearGradient id=\\"g1\\" .../>"}
-Use camelCase for SVG attrs (strokeWidth, etc). All values must be computed numbers.`;
+Output the result as a complete SVG element with viewBox="0 0 ${vbW} ${vbH}". Wrap each color layer in a <g id="layer-name"> tag. No markdown fences around the SVG, no extra text after it.`;
 }
 
 // ── Main Export ─────────────────────────────────────────────────────
 
 /**
- * Generate SVG composition via single natural-language Gemini call.
+ * Generate SVG composition via single Gemini call.
+ * Ask for raw SVG, parse into layer format.
  */
 export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, options = {}) {
   if (!apiKey) throw new Error('Please enter your Gemini API key');
@@ -248,32 +312,24 @@ export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, opti
   onProgress({ step: 0, label: 'Preparing image...' });
   const imageBase64 = await resizeImageToBase64(imageSrc);
 
-  // Single call
+  // Single call — ask for raw SVG
   onProgress({ step: 1, label: 'Creating SVG composition...' });
-  console.log('[PaintWise] Generating SVG composition...');
+  console.log('[PaintWise] Generating raw SVG...');
 
   const prompt = buildPrompt(analysisMetadata);
-
   const text = await callGemini(apiKey, model, [
     { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
     { text: prompt },
   ], { maxTokens: 65536 });
 
-  onProgress({ step: 2, label: 'Parsing result...' });
+  // Parse raw SVG into layer format
+  onProgress({ step: 2, label: 'Parsing SVG layers...' });
 
-  const composition = extractJson(text);
+  const composition = parseSvgToComposition(text);
   if (!composition) {
     console.error('[PaintWise] SVG parse failed. First 500:', text.slice(0, 500));
-    console.error('[PaintWise] Last 200:', text.slice(-200));
-    throw new Error('Failed to parse SVG composition from AI');
+    throw new Error('Failed to parse SVG from AI response');
   }
-
-  console.log('[PaintWise] Composition:', {
-    viewBox: composition.viewBox,
-    layers: composition.layers?.length,
-    names: composition.layers?.map(l => l.name),
-    totalElements: composition.layers?.reduce((s, l) => s + (l.elements?.length || 0), 0),
-  });
 
   // Verify
   const verification = verifyComposition(composition, analysisMetadata);
