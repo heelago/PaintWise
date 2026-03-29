@@ -68,19 +68,28 @@ function extractJson(text) {
   try { return JSON.parse(text); } catch { /* */ }
 
   // Strip markdown fences (complete or truncated)
-  let cleaned = text;
-  // Complete fence
-  const fence = cleaned.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fence) {
-    try { return JSON.parse(fence[1].trim()); } catch { /* */ }
-    cleaned = fence[1].trim();
-  } else {
-    // Opening fence without closing (truncated)
-    const openFence = cleaned.match(/```(?:json)?\s*([\s\S]*)/);
-    if (openFence) {
-      cleaned = openFence[1].trim();
-    }
+  let cleaned = text.trim();
+  if (cleaned.startsWith('```')) {
+    // Remove opening fence
+    cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '');
+    // Remove closing fence
+    cleaned = cleaned.replace(/\n?```\s*$/, '');
   }
+
+  // Evaluate math expressions in numeric JSON values
+  // e.g. "y2": 372 + (270 - (230 + 1)) * 0.85 → "y2": 405.15
+  cleaned = cleaned.replace(/:\s*(\d[\d\s+\-*/().]*\d)\s*([,\n\r\}])/g, (match, expr, after) => {
+    try {
+      const val = Function('"use strict"; return (' + expr + ')')();
+      if (typeof val === 'number' && isFinite(val)) {
+        return ': ' + Math.round(val * 100) / 100 + after;
+      }
+    } catch { /* leave as is */ }
+    return match;
+  });
+
+  // Try parsing the cleaned text
+  try { return JSON.parse(cleaned); } catch { /* */ }
 
   // Find outermost braces
   const start = cleaned.indexOf('{');
@@ -314,10 +323,9 @@ async function analyzeScene(apiKey, imageBase64, model, metadata) {
 
 // ── Call 2: The "Painter" — SVG with Watercolor Physics ─────────────
 //
-// Three key upgrades from Gemini's feedback:
-// 1. Procedural cloud stacking (5-10 overlapping paths, not one blob)
-// 2. <use> tag reflections (mathematically perfect, frees up tokens)
-// 3. Jagged horizon silhouette (not a straight line)
+// BEST VERSION (tagged v-best-painter). Produces the highest quality output.
+// Uses specific SVG technique instructions with examples.
+// Procedural cloud stacking, jagged horizon, reflection math.
 
 function buildPainterPrompt(inventory) {
   let vbW = 800, vbH = 600;
@@ -329,7 +337,7 @@ function buildPainterPrompt(inventory) {
   const hY = Math.round(hPercent / 100 * vbH);
   const hasRefl = inventory.reflection?.present === true;
 
-  return `You are an SVG engineer creating a watercolor painting study. Use clean geometric forms for architecture, procedural layered opacity for clouds, and mathematical transforms for reflections.
+  return `You are an SVG engineer creating a watercolor painting study. Study the structural data and the photograph. Render EVERY element the Draftsman identified using clean geometric forms, procedural layered opacity for organic shapes, and mathematical transforms for reflections.
 
 STRUCTURAL DATA:
 ${JSON.stringify(inventory, null, 2)}
@@ -339,85 +347,65 @@ HORIZON Y: ${hY}px (${hPercent}% from top)
 HAS REFLECTION: ${hasRefl}
 Coords: x_px = percent/100 * ${vbW}, y_px = percent/100 * ${vbH}
 
-Return ONLY valid JSON. No markdown fences.
+Return ONLY valid JSON. No markdown fences. All numeric values must be COMPUTED NUMBERS, not math expressions.
 { "viewBox": "0 0 ${vbW} ${vbH}", "layers": [{ "id": "string", "name": "string", "description": "string", "paintingTip": "string", "elements": [{ "type": "rect|path|circle|ellipse|line|defs", "attrs": {} }] }] }
 
-=== LAYER STRUCTURE ===
+=== LAYER STRUCTURE (4-7 layers, lightest to darkest) ===
 
 Layer 1: "Base Washes"
-  TWO separate gradient rects — one for each side of the horizon.
-  The "real" side is brighter. The "reflected/puddle" side uses the same hues darkened 15-20%.
+  Gradient rects for the major color zones identified in the structural data.
+  If there's a horizon, use SEPARATE gradient rects for each zone.
   Gradients go in defs elements with "content" string.
   Example defs: {"type":"defs","content":"<linearGradient id=\\"skyA\\" x1=\\"0%\\" y1=\\"0%\\" x2=\\"0%\\" y2=\\"100%\\"><stop offset=\\"0%\\" stop-color=\\"#5d85a6\\"/><stop offset=\\"100%\\" stop-color=\\"#d69c7a\\"/></linearGradient>"}
   Example rect: {"type":"rect","attrs":{"x":0,"y":${hY},"width":${vbW},"height":${vbH - hY},"fill":"url(#skyA)"}}
 
-Layer 2: "Soft Volumes" (clouds, foliage, organic forms)
-  === PROCEDURAL CLOUD STACKING ===
-  Do NOT draw one giant path per cloud. Each cloud mass must be built by stacking
+Layer 2: "Soft Volumes" (clouds, water ripples, foliage, organic forms — whatever the Draftsman found)
+  === PROCEDURAL STACKING ===
+  Do NOT draw one giant path per volume. Each mass must be built by stacking
   5-10 SMALLER overlapping <path> elements with VARYING opacities:
     - 2-3 large shadow shapes (cool dark color, opacity 0.2-0.4)
     - 2-3 midtone shapes (warm color, opacity 0.4-0.6)
     - 2-3 highlight shapes (near-white, opacity 0.6-0.9)
-    - 1-2 <circle> elements for the brightest puffy highlights (opacity 0.8-0.9)
-  Use Cubic Bezier (C/S) curves with LUMPY, CAULIFLOWER-LIKE edges:
+    - 1-2 <circle> elements for the brightest highlights (opacity 0.8-0.9)
+  Use Cubic Bezier (C/S) curves with LUMPY edges:
     "M100,200 C130,150 180,140 220,170 S290,200 320,180 C350,160 380,190 400,200 L400,250 C300,260 200,255 100,250 Z"
   This stacking creates the wet-on-wet watercolor bleed effect.
-  If reflection exists: include reflected cloud shapes (darker, lower opacity) on the other side of the horizon.
+  If reflection exists: include reflected versions (darker, lower opacity) on the other side.
 
-Layer 3: "Hard Geometry" (architecture, rigid forms)
-  a) ONE dark shadow <rect> spanning the entire horizon band as a depth base.
-  b) Individual building faces as CLEAN <rect> elements on top.
-     Buildings sit on the horizon line, extending away from it.
-  c) Windows as small dark <rect> elements — NOT a uniform grid.
-     Vary widths by 1-4px, skip some (glare), darken some (recessed).
-  d) Shadow polygons under overhangs (dark translucent trapezoid <path>).
-
-  === JAGGED HORIZON SILHOUETTE ===
-  Do NOT use a single straight <line> or thin <rect> for the horizon.
-  The horizon MUST be a <path> that follows the actual jagged silhouette
-  of buildings/trees/terrain meeting the sky. Use the horizon_silhouette
-  description from the structural data to build this path.
-  Example: "M0,${hY} L80,${hY} L80,${hY - 5} L120,${hY - 5} L120,${hY - 40} L125,${hY - 40} L125,${hY} L200,${hY} ..."
-  Fill this path with a dark color (the shadow base extends through it).
+Layer 3: "Hard Geometry" (architecture, vehicles, objects — whatever rigid forms the Draftsman found)
+  a) ONE dark shadow <rect> behind the group as a depth base.
+  b) Individual elements as CLEAN <rect> elements on top, positioned from the inventory bounds.
+  c) Sub-details (windows, markings) as small dark <rect> elements.
+  d) If a horizon_silhouette was identified, render it as a jagged <path>.
 
 ${hasRefl ? `Layer 4: "Reflection"
-  === USE-TAG REFLECTION TECHNIQUE ===
-  Do NOT manually redraw every reflected element. Instead:
-  1. All "real" hard geometry elements from Layer 3 should work as the source.
-  2. Create a COPY of each real building rect, but with:
-     - reflected_height = real_height × 0.85
-     - reflected_y = horizon_y - reflected_height (for puddle above) or horizon_y + offset (for water below)
-     - Color darkened by multiplying RGB by 0.80
-     - Opacity reduced by 0.15 from the real element
-  3. The reflected clouds from Layer 2 should already be included there.
-  4. THEN overlay the "Surface Texture" layer ON TOP of the reflection to
-     ground it as a puddle/water surface.
+  For EVERY element above the horizon, create a mirrored copy:
+  - reflected_height = real_height × 0.85
+  - reflected_y = horizon_y ± (distance from horizon × 0.85)
+  - Color darkened by multiplying RGB by 0.80
+  - Opacity reduced by 0.15 from the real element
+  Overlay "Surface Texture" ON TOP of the reflection.
 
 ` : ''}Layer ${hasRefl ? 5 : 4}: "Surface Texture"
-  For textured surfaces (concrete, asphalt, wet ground), use:
-  a) A dark <path> wash over the puddle/ground zone (opacity 0.4-0.6)
+  For textured surfaces identified by the Draftsman:
+  a) Dark <path> wash (opacity 0.4-0.6)
   b) 2-4 sweeping <path> strokes: fill="none", stroke=dark_color,
      strokeWidth=40-60, strokeDasharray="5,15,20,10", opacity 0.2-0.4
-  c) 5-10 small <circle> grit dots (r=1-3, scattered, mixed dark/light)
-  This texture OVERLAYS the reflection, making it look like a real surface.
+  c) 5-10 small <circle> grit dots (r=1-3)
 
 Layer ${hasRefl ? 6 : 5}: "Focal Details"
-  The darkest, most concentrated marks (last in watercolor — least water).
-  - Poles: thin <rect> width=2-4px, straight. Include reflected version if reflection exists.
-  - Lamp fixtures: geometric <path> trapezoids + small <rect> elements.
-  - Birds: <path> v-shapes. Example: "M220,250 Q225,255 230,250 Q225,252 220,250 Z"
-  - Include BOTH real and reflected versions of every detail element.
-  - Wires, antennas, cracks, signage — everything from focal_details in the data.
+  The darkest marks (last in watercolor — least water).
+  Render EVERY focal_detail from the inventory using appropriate primitives.
+  Opacity 0.7-0.95.
+${hasRefl ? `  Include reflected versions of each detail.` : ''}
 
-=== ATMOSPHERIC PERSPECTIVE ===
-Background (base washes, distant clouds): opacity 0.2-0.5, large shapes.
-Midground (architecture, main clouds): opacity 0.5-0.8.
-Foreground (texture, details, poles): opacity 0.7-0.95, sharp edges.
-
-=== TECHNIQUE RULES ===
-ALL ATTRS camelCase: strokeWidth, strokeDasharray, strokeLinecap.
-COLORS: ONLY from palette. May darken (×0.80) or lighten (×1.15).
-PAINTING TIPS: Name pigments, brush sizes, techniques.`;
+=== RULES ===
+1. RENDER EVERY ELEMENT from the structural data. Do not skip anything.
+2. ALL attrs camelCase: strokeWidth, strokeDasharray, strokeLinecap.
+3. COLORS: ONLY from palette. May darken (×0.80) or lighten (×1.15).
+4. ATMOSPHERIC DEPTH: far=low opacity (0.3-0.5), near=high opacity (0.7-0.95).
+5. PAINTING TIPS: Name pigments, brush sizes, techniques.
+6. All numeric values must be COMPUTED NUMBERS (e.g. 372, not "372 + 50 * 0.85").`;
 }
 
 async function generateSvgFromInventory(apiKey, imageBase64, inventory, model) {
