@@ -309,68 +309,62 @@ function buildPainterPrompt(inventory) {
     vbW = 533; vbH = 800;
   }
 
-  return `You are a Master Watercolorist and expert SVG engineer. I will provide you with a structured JSON map of an image's geometry and color palette extracted by computer vision.
+  return `You are a Master Watercolorist and expert SVG engineer. Take this structural analysis and the original photograph and produce a layered SVG that looks like a watercolor painting study — organic, translucent, with visible brushwork character.
 
-Your task is to translate this rigid geometric data into a beautiful, ORGANIC SVG composition that looks like a watercolor painting study — not a transit map.
-
-STRUCTURAL DATA FROM DRAFTSMAN:
+STRUCTURAL DATA:
 ${JSON.stringify(inventory, null, 2)}
 
 VIEWBOX: "0 0 ${vbW} ${vbH}"
+Coordinate conversion: x_px = percent/100 * ${vbW}, y_px = percent/100 * ${vbH}
 
-Convert percentage coordinates to pixels: x_px = percent/100 * ${vbW}, y_px = percent/100 * ${vbH}
+Return ONLY valid JSON. No markdown fences.
 
-Return ONLY valid JSON. No markdown fences. No explanation.
+{ "viewBox": "0 0 ${vbW} ${vbH}", "layers": [{ "id": "string", "name": "string", "description": "string", "paintingTip": "string", "elements": [{ "type": "rect|path|circle|ellipse|line|defs", "attrs": {} }] }] }
 
-{
-  "viewBox": "0 0 ${vbW} ${vbH}",
-  "layers": [
-    {
-      "id": "kebab-case-id",
-      "name": "Layer Name",
-      "description": "what this layer contains",
-      "paintingTip": "beginner watercolor advice: brush, technique, pigments",
-      "elements": [
-        { "type": "rect|circle|ellipse|path|line|defs", "attrs": { camelCase SVG attributes } }
-      ]
-    }
-  ]
-}
+=== MANDATORY LAYER ORDER (light to dark, like real watercolor) ===
 
-CRITICAL WATERCOLOR SVG TECHNIQUES — you MUST apply these:
+You MUST create exactly these layers in this order. This mirrors how a watercolorist builds a painting:
 
-1. **FLUID TRANSLUCENCY:** NEVER use opacity 1.0 for background or midground fills. Use 0.3-0.85. Overlapping cloud and water layers should feel like wet pigment combining. Background washes at 0.3-0.5, midground at 0.5-0.7, foreground at 0.7-0.9.
+Layer 1: "Sky Wash" — The lightest, most dilute wash. A full-width gradient rect covering the sky zone. Use a linearGradient in a defs element. Opacity 0.4-0.6. This is the first brushstroke on wet paper.
 
-2. **ORGANIC SHAPES — NO RIGID RECTS for natural forms:** Convert cloud bounding boxes into SVG <path> elements using Cubic (C) and Smooth (S) Bezier curves. Clouds must have lumpy, irregular, billowing edges — NOT rectangles or perfect ellipses. For buildings, introduce a 1-2 pixel wobble to straight lines so they look hand-painted, not CAD-drawn.
+Layer 2: "Cloud Volumes" — Semi-transparent organic shapes for clouds. MUST use <path> with Cubic Bezier (C/S) curves creating lumpy, billowing, irregular edges. Each cloud is its OWN path — not a rectangle, not an ellipse. Cloud shadows are separate darker paths underneath. Opacity 0.3-0.6.
 
-3. **DRY BRUSH TEXTURE:** For concrete, ground, asphalt, or rough surfaces, use thick <path> strokes with fill="none" and random-looking strokeDasharray patterns like "5, 15, 20, 10" or "8, 12, 3, 18". Use strokeWidth 30-60 and low opacity (0.2-0.4). This emulates cold-pressed paper catching dry pigment.
+Layer 3: "Midground Architecture" — Buildings, walls, structural masses. Use <path> elements with SLIGHTLY WOBBLY edges (offset straight lines by 1-2px to look hand-drawn). Windows are small dark <rect> elements. Add structural details: ledges, signs, shadows under overhangs. Opacity 0.6-0.85.
 
-4. **WATER REFLECTION DISTORTION:** If there's a reflection, the reflected elements must be:
-   - Vertically compressed by 0.85x
-   - Colors darkened ~15-20%
-   - Vertical edges given slight bezier wobble (water ripple)
-   - Slightly lower opacity than the real elements
+Layer 4: "Reflection Zone" — THIS IS CRITICAL if a reflection exists:
+  The reflection is NOT a copy of the architecture. It must be:
+  a) Positioned BELOW the horizon axis (or ABOVE if the image is inverted — look at the structural data's reflection.axis_y_percent)
+  b) Vertically COMPRESSED: multiply height by 0.85. A building that is 50px tall in reality is only 42px in reflection.
+  c) Colors DARKENED: multiply each RGB channel by 0.80-0.85. Water absorbs ~15-20% of light.
+  d) Edges WOBBLED: vertical lines should use bezier curves with 2-4px horizontal displacement to simulate water ripple. A straight pole becomes a gently wavy line.
+  e) Opacity REDUCED to 0.4-0.6 (the reflection is see-through to the water/sky beneath).
+  f) The reflected sky/clouds should also appear, darker and slightly blurred (use larger, softer shapes).
+  MATH: If real element is at y_real with height h_real, and horizon is at h_y:
+    reflected_height = h_real * 0.85
+    reflected_y = h_y - reflected_height (for above-horizon reflection)
+    OR reflected_y = h_y (for below-horizon reflection)
 
-5. **GRADIENTS:** Put linearGradient/radialGradient SVG markup in a "defs" element's "content" field (as a raw SVG string). Reference via url(#gradientId) in fill attrs. Sky gradients should have 4-5 stops sampled from the palette.
+Layer 5: "Ground Texture" — Concrete, asphalt, sand, wet surfaces. Use <path> elements with:
+  fill="none", stroke=dark_color, strokeWidth="30-60", strokeDasharray="5, 15, 20, 10"
+  This creates the dry-brush-on-cold-pressed-paper effect. 2-4 sweeping curved paths. Opacity 0.15-0.35.
 
-6. **SVG PATH SYNTAX FOR CLOUDS:** Use paths like:
-   "M50,200 C80,150 150,130 200,180 S300,220 350,190 C400,160 420,200 450,210 S500,250 520,200 L520,280 L50,280 Z"
-   NOT rectangles. The control points create the organic, billowing shape.
+Layer 6: "Dark Details" — The darkest, most concentrated pigment: poles, wires, birds, deep shadows, window recesses, signage text. These go LAST because in watercolor, darks are applied with the least water. Opacity 0.7-0.95. Poles are thin <line> or <rect> elements. Birds are small <path> v-shapes. Wires are thin <line> elements.
 
-7. **ALL ATTRS MUST BE camelCase:** strokeWidth, strokeDasharray, strokeLinecap, fillOpacity. NOT hyphenated.
+=== SVG TECHNIQUE RULES ===
 
-8. **INCLUDE EVERY ELEMENT** from the structural data. Every building, window, bird, pole, wire, sign, texture patch.
+CLOUDS: Each cloud MUST be a <path> with C (cubic bezier) commands. Example of a billowing cumulus:
+  "M100,150 C120,100 180,80 220,120 S300,160 340,130 C380,100 400,130 420,140 S460,180 480,150 L480,200 C400,210 300,220 200,200 Z"
+  The top edge billows (up-down-up curves). The bottom edge is flatter. NEVER use <rect> or <ellipse> for clouds.
 
-9. **PAINTING TIPS** should name specific pigments (Burnt Sienna, French Ultramarine, Naples Yellow), brush types (size 12 flat, size 6 round, rigger), and techniques (wet-on-wet, dry brush, lifting, charging).
+GRADIENTS: Put gradient SVG markup as a string in a defs element's "content" field:
+  { "type": "defs", "content": "<linearGradient id=\\"skyGrad\\" x1=\\"0\\" y1=\\"0\\" x2=\\"0\\" y2=\\"1\\"><stop offset=\\"0%\\" stop-color=\\"#82a0ba\\"/><stop offset=\\"100%\\" stop-color=\\"#d4a986\\"/></linearGradient>" }
+  Then reference: { "type": "rect", "attrs": { "fill": "url(#skyGrad)", ... } }
 
-10. **LAYER ORDER:** 5-8 layers, strictly back-to-front:
-    - Background sky gradient wash
-    - Cloud volumes (organic bezier paths, translucent)
-    - Architecture (buildings with wobble, windows as dark rects)
-    - Foreground details (poles, wires, birds)
-    - Texture overlays (dry brush dasharray paths)
+ATTRS: ALL camelCase — strokeWidth, strokeDasharray, strokeLinecap, fillOpacity. Never hyphenated.
 
-11. **COLOR DISCIPLINE:** Use ONLY the hex codes from the structural data's palette. Do NOT invent new colors. You may darken or lighten these hex codes for shadows/highlights (multiply RGB by 0.7-0.9 for shadows, 1.1-1.3 for highlights), but the base hues must come from the palette.`;
+COLORS: Use ONLY hex codes from the palette in the structural data. You may darken (multiply by 0.7-0.9) or lighten (multiply by 1.1-1.3) for shadows/highlights, but base hues must come from the palette.
+
+PAINTING TIPS: Each layer's paintingTip should name the specific pigments from the palette, the brush (size 12 flat, size 6 round, rigger), and technique (wet-on-wet, wet-on-dry, dry brush, lifting, charging).`;
 }
 
 async function generateSvgFromInventory(apiKey, imageBase64, inventory, model) {
