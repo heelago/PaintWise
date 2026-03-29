@@ -193,9 +193,8 @@ export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, opti
       ],
     }],
     generationConfig: {
-      temperature: 0.2,
-      maxOutputTokens: 8192,
-      responseMimeType: 'application/json',
+      temperature: 0.3,
+      maxOutputTokens: 16384,
     },
   };
 
@@ -221,18 +220,62 @@ export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, opti
   }
 
   const result = await response.json();
+  console.log('[PaintWise] Gemini API response status:', response.status);
+  console.log('[PaintWise] Gemini result structure:', {
+    candidateCount: result?.candidates?.length,
+    finishReason: result?.candidates?.[0]?.finishReason,
+    partsCount: result?.candidates?.[0]?.content?.parts?.length,
+    promptFeedback: result?.promptFeedback,
+  });
 
-  // Extract text from Gemini response
-  const textContent = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!textContent) {
-    throw new Error('Gemini returned no content');
+  // Check for blocked content
+  if (result?.promptFeedback?.blockReason) {
+    throw new Error(`Gemini blocked the request: ${result.promptFeedback.blockReason}`);
   }
+
+  const candidate = result?.candidates?.[0];
+  if (!candidate) {
+    console.error('[PaintWise] Full Gemini response:', JSON.stringify(result).slice(0, 2000));
+    throw new Error('Gemini returned no candidates');
+  }
+
+  if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+    console.warn('[PaintWise] Gemini finish reason:', candidate.finishReason);
+    if (candidate.finishReason === 'MAX_TOKENS') {
+      throw new Error('Gemini response was cut off (too long). Try with a simpler image.');
+    }
+    if (candidate.finishReason === 'SAFETY') {
+      throw new Error('Gemini blocked the response due to safety filters.');
+    }
+  }
+
+  // Extract text from all parts
+  const parts = candidate.content?.parts || [];
+  let textContent = '';
+  for (const part of parts) {
+    if (part.text) textContent += part.text;
+  }
+
+  if (!textContent) {
+    console.error('[PaintWise] Candidate parts:', JSON.stringify(parts).slice(0, 1000));
+    throw new Error('Gemini returned no text content');
+  }
+
+  console.log('[PaintWise] Raw response length:', textContent.length);
+  console.log('[PaintWise] Response preview:', textContent.slice(0, 500));
 
   // Parse JSON
   const composition = extractJson(textContent);
   if (!composition) {
-    throw new Error('Could not parse Gemini response as JSON');
+    console.error('[PaintWise] Failed to parse. Full text:', textContent.slice(0, 3000));
+    throw new Error('Could not parse Gemini response as JSON. Check browser console for details.');
   }
+
+  console.log('[PaintWise] Parsed composition:', {
+    viewBox: composition.viewBox,
+    layerCount: composition.layers?.length,
+    layerNames: composition.layers?.map(l => l.name),
+  });
 
   // Verify
   const verification = verifyComposition(composition, analysisMetadata);
