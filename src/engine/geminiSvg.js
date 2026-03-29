@@ -123,13 +123,15 @@ function extractJson(text) {
   return null;
 }
 
-// ── Gemini API caller with system instruction support ─────────────
+// ── Gemini API caller (supports single-turn and multi-turn) ───────
 
-async function callGemini(apiKey, model, parts, { maxTokens = 65536, systemInstruction = null } = {}) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
+async function callGemini(apiKey, model, contents, { maxTokens = 65536 } = {}) {
+  // contents can be:
+  //   - an array of parts (single turn): [{ text }, { inline_data }]
+  //   - an array of messages (multi-turn): [{ role, parts }, ...]
+  const isMultiTurn = contents[0]?.role != null;
   const body = {
-    contents: [{ parts }],
+    contents: isMultiTurn ? contents : [{ parts: contents }],
     generationConfig: {
       temperature: 0.4,
       maxOutputTokens: maxTokens,
@@ -137,10 +139,7 @@ async function callGemini(apiKey, model, parts, { maxTokens = 65536, systemInstr
     },
   };
 
-  if (systemInstruction) {
-    body.systemInstruction = { parts: [{ text: systemInstruction }] };
-  }
-
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -186,38 +185,50 @@ async function callGemini(apiKey, model, parts, { maxTokens = 65536, systemInstr
   return text;
 }
 
-// ── Single-call natural prompt ────────────────────────────────────
-// Simple, conversational prompt that lets Gemini do what it does
-// best — analyze and recreate. We inject the authoritative palette
-// and aspect ratio, but keep everything else natural.
+// ── Conversational two-step prompt ────────────────────────────────
+// Step 1: Ask Gemini to analyze the image (colors, perspective,
+//         proportions) in a conversational way.
+// Step 2: In the SAME chat thread, ask it to build SVG from its
+//         own analysis. Multi-turn keeps the analysis in context.
 
-function buildPrompt(metadata) {
+function buildStep1Prompt(metadata) {
   const isPortrait = metadata.width < metadata.height;
-  const ratio = metadata.width / metadata.height;
-  const vbW = 1000;
-  const vbH = Math.round(1000 / ratio);
 
-  // Authoritative palette
   let paletteNote = '';
   if (metadata.centroids?.length) {
     const hexList = metadata.centroids.map(c =>
       '#' + c.map(v => Math.round(v).toString(16).padStart(2, '0')).join('')
     );
-    paletteNote = `\n\nI've already extracted the color palette from the image — please use ONLY these hex colors (you may darken or lighten them slightly): ${JSON.stringify(hexList)}`;
+    paletteNote = `\n\nI've already extracted the color palette from the image pixels — please use these as your base colors: ${JSON.stringify(hexList)}`;
   }
 
   let sceneHints = '';
   if (metadata.hasReflection) {
-    sceneHints += '\nNote: there appears to be a reflection in the water — please include the reflected elements.';
+    sceneHints += '\nNote: there appears to be a reflection in the water.';
   }
 
-  return `Hey, can you help me deconstruct this photo into a buildable image made of SVG layers for a painting tutorial app I'm working on?
+  return `Hey buddy, can you help me deconstruct this photo for a painting tutorial app I'm working on?
 
-The image is ${metadata.width}x${metadata.height}px (${isPortrait ? 'portrait' : 'landscape'}). Please use viewBox="0 0 ${vbW} ${vbH}".${paletteNote}${sceneHints}
+The image is ${metadata.width}x${metadata.height}px (${isPortrait ? 'portrait' : 'landscape'}).${paletteNote}${sceneHints}
 
-Please first analyze the colors, perspective, and proportions in the image and then recreate a sort of approximation from shapes — like a simplified, stylized vector painting with 8-10 color layers ordered back to front.
+Before we build anything, please first analyze the colors, perspective, and proportions in the image:
 
-Output the result as JSON matching this schema (no markdown fences, no extra text after the JSON):
+1. Confirm or refine the color palette — extract 8-12 distinct colors from background to foreground details with hex codes.
+2. Break down the main objects and their approximate relative sizes and positions.
+3. Note how they sit in space — where is the horizon, what's the perspective, and are there any reflections or foreshortened angles?
+4. Give me a mental map of how we should build this as layers of simple vector shapes, back to front.`;
+}
+
+function buildStep2Prompt(metadata) {
+  const ratio = metadata.width / metadata.height;
+  const vbW = 1000;
+  const vbH = Math.round(1000 / ratio);
+
+  return `Perfect, thank you! Now, based exactly on your analysis, can you recreate a buildable image made of SVG layers for each color?
+
+Please use viewBox="0 0 ${vbW} ${vbH}" and recreate an approximation from shapes (ellipses, rects, paths, polygons). Make sure to strictly use the exact colors you extracted and rely heavily on your proportion and perspective analysis so the scale looks accurate!
+
+Output ONLY valid JSON matching this schema (no markdown fences, no extra text after the JSON):
 {
   "viewBox": "0 0 ${vbW} ${vbH}",
   "layers": [
@@ -233,14 +244,16 @@ Output the result as JSON matching this schema (no markdown fences, no extra tex
   ]
 }
 
-For gradients use defs elements like: {"type":"defs","content":"<linearGradient id=\\"g1\\" ...><stop .../></linearGradient>"}
+For gradients use: {"type":"defs","content":"<linearGradient id=\\"g1\\" ...><stop .../></linearGradient>"}
 Use camelCase for SVG attrs (strokeWidth, etc). All values must be computed numbers.`;
 }
 
 // ── Main Export ─────────────────────────────────────────────────────
 
 /**
- * Generate SVG composition via single natural-language Gemini call.
+ * Generate SVG composition via conversational two-step Gemini pipeline.
+ * Both steps happen in a single multi-turn API call so the model
+ * builds from its own analysis.
  */
 export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, options = {}) {
   if (!apiKey) throw new Error('Please enter your Gemini API key');
@@ -264,23 +277,39 @@ export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, opti
   onProgress({ step: 0, label: 'Preparing image...' });
   const imageBase64 = await resizeImageToBase64(imageSrc);
 
-  // Single call with natural prompt
-  onProgress({ step: 1, label: 'Creating SVG composition...' });
-  console.log('[PaintWise] Generating SVG composition...');
+  // Step 1: Analysis
+  onProgress({ step: 1, label: 'Analyzing your photo...' });
+  console.log('[PaintWise] Step 1: Analyzing image...');
 
-  const prompt = buildPrompt(analysisMetadata);
-
-  const text = await callGemini(apiKey, model, [
+  const step1Prompt = buildStep1Prompt(analysisMetadata);
+  const analysisText = await callGemini(apiKey, model, [
     { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
-    { text: prompt },
+    { text: step1Prompt },
+  ], { maxTokens: 4096 });
+
+  console.log('[PaintWise] Analysis preview:', analysisText.slice(0, 300));
+
+  // Step 2: Generation — multi-turn with analysis as context
+  onProgress({ step: 2, label: 'Building SVG composition...' });
+  console.log('[PaintWise] Step 2: Building SVG from analysis...');
+
+  const step2Prompt = buildStep2Prompt(analysisMetadata);
+  const svgText = await callGemini(apiKey, model, [
+    // Turn 1: user sends image + analysis request
+    { role: 'user', parts: [
+      { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
+      { text: step1Prompt },
+    ]},
+    // Turn 2: model's analysis response
+    { role: 'model', parts: [{ text: analysisText }] },
+    // Turn 3: user asks for SVG based on the analysis
+    { role: 'user', parts: [{ text: step2Prompt }] },
   ], { maxTokens: 65536 });
 
-  onProgress({ step: 2, label: 'Parsing result...' });
-
-  const composition = extractJson(text);
+  const composition = extractJson(svgText);
   if (!composition) {
-    console.error('[PaintWise] SVG parse failed. First 500 chars:', text.slice(0, 500));
-    console.error('[PaintWise] Last 200 chars:', text.slice(-200));
+    console.error('[PaintWise] SVG parse failed. First 500:', svgText.slice(0, 500));
+    console.error('[PaintWise] Last 200:', svgText.slice(-200));
     throw new Error('Failed to parse SVG composition from AI');
   }
 
@@ -299,7 +328,7 @@ export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, opti
   }
 
   cacheWrite(`pw-comp-${hash}`, composition);
-  return { composition, warnings: verification.warnings, inventory: null };
+  return { composition, warnings: verification.warnings, inventory: analysisText };
 }
 
 export function clearSvgCache() {

@@ -22,7 +22,7 @@ const RESULTS_DIR = 'test-results';
 // ── Args ──
 const args = process.argv.slice(2);
 const tag = args.find((a, i) => args[i - 1] === '--tag') || 'test';
-const mode = args.includes('--two-call') ? 'two-call' : 'simple';
+const mode = args.includes('--convo') ? 'convo' : 'simple';
 
 // ── Helpers ──
 function imageToBase64(path) {
@@ -201,33 +201,85 @@ async function run() {
   const promptText = PROMPTS[promptKey] || PROMPTS.simple;
   if (!PROMPTS[promptKey]) console.log(`  ⚠ Unknown prompt "${promptKey}", using "simple"`);
 
-  if (mode === 'simple') {
+  if (mode === 'convo') {
+    // Conversational two-step: analyze first, then build in same thread
+    const vbH = 750; // 4:3 aspect
+
+    const step1 = `Hey buddy, can you help me deconstruct this photo for a painting tutorial app I'm working on?
+
+The image is 2000x1500px (landscape).
+
+I've already extracted the color palette — please use these as your base colors: ["#6b6359","#9b8d78","#3d3228","#503e2e","#1e160f","#c08a4e","#443c34","#786b5a","#595147","#876b48","#2e2720","#ab9874","#b0926e","#917e66"]
+
+Note: there appears to be a reflection in the water.
+
+Before we build anything, please first analyze the colors, perspective, and proportions in the image:
+1. Confirm or refine the color palette — 8-12 distinct colors from background to foreground with hex codes.
+2. Break down the main objects and their approximate relative sizes and positions.
+3. Note how they sit in space — where is the horizon, what's the perspective, any reflections or foreshortened angles?
+4. Give me a mental map of how we should build this as layers of simple vector shapes, back to front.`;
+
+    const step2 = `Perfect, thank you! Now, based exactly on your analysis, can you recreate a buildable image made of SVG layers for each color?
+
+Please use viewBox="0 0 1000 ${vbH}" and recreate an approximation from shapes (ellipses, rects, paths, polygons). Make sure to strictly use the exact colors you extracted and rely heavily on your proportion and perspective analysis so the scale looks accurate!
+
+Output ONLY valid JSON matching this schema (no markdown fences, no extra text after the JSON):
+{
+  "viewBox": "0 0 1000 ${vbH}",
+  "layers": [
+    {
+      "id": "layer-id",
+      "name": "Layer Name",
+      "description": "what this layer represents",
+      "paintingTip": "watercolor technique tip naming pigments and brush sizes",
+      "elements": [
+        { "type": "rect|path|circle|ellipse|line|defs", "attrs": { ... } }
+      ]
+    }
+  ]
+}
+
+For gradients use: {"type":"defs","content":"<linearGradient id=\\"g1\\" ...><stop .../></linearGradient>"}
+Use camelCase for SVG attrs (strokeWidth, etc). All values must be computed numbers.`;
+
+    console.log('\n📤 Step 1: Analyzing image...');
+    const { text: analysisText } = await callGemini([
+      { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
+      { text: step1 },
+    ], { maxTokens: 4096 });
+    analysis = analysisText;
+    console.log('   Preview:', analysisText.slice(0, 200));
+
+    console.log('\n📤 Step 2: Building SVG (multi-turn with analysis)...');
+    const { text: svgText } = await callGemini([
+      { role: 'user', parts: [
+        { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
+        { text: step1 },
+      ]},
+      { role: 'model', parts: [{ text: analysisText }] },
+      { role: 'user', parts: [{ text: step2 }] },
+    ], { maxTokens: 65536 });
+    rawText = svgText;
+    composition = extractJson(svgText);
+  } else {
     console.log(`\n📤 Single call (prompt: ${promptKey})...`);
-    const { text, finishReason, elapsed } = await callGemini([
+    const { text } = await callGemini([
       { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
       { text: promptText },
     ]);
     rawText = text;
 
-    // Extract analysis if present
-    const analysisMatch = text.match(/<Analysis>([\s\S]*?)<\/Analysis>/i);
-    if (analysisMatch) {
-      analysis = analysisMatch[1].trim();
-      console.log('\n📋 Analysis found (' + analysis.length + ' chars)');
-    }
-
-    // Extract JSON
     const jsonStart = text.indexOf('{');
     composition = extractJson(jsonStart >= 0 ? text.slice(jsonStart) : text);
+  }
 
-    if (composition) {
-      const els = composition.layers?.reduce((s, l) => s + (l.elements?.length || 0), 0) || 0;
-      console.log(`\n✅ Composition: ${composition.layers?.length} layers, ${els} elements`);
-      console.log(`   Layers: ${composition.layers?.map(l => l.name).join(', ')}`);
-    } else {
-      console.log('\n❌ Failed to parse JSON from response');
-      console.log('   First 300 chars:', text.slice(0, 300));
-    }
+  if (composition) {
+    const els = composition.layers?.reduce((s, l) => s + (l.elements?.length || 0), 0) || 0;
+    console.log(`\n✅ Composition: ${composition.layers?.length} layers, ${els} elements`);
+    console.log(`   Layers: ${composition.layers?.map(l => l.name).join(', ')}`);
+  } else {
+    console.log('\n❌ Failed to parse JSON from response');
+    console.log('   First 300 chars:', rawText.slice(0, 300));
   }
 
   // Save result

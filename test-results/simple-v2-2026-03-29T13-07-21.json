@@ -1,0 +1,532 @@
+{
+  "tag": "simple-v2",
+  "mode": "simple",
+  "timestamp": "2026-03-29T13-07-21",
+  "model": "gemini-2.5-flash",
+  "image": "public/reference-sunset.jpeg",
+  "analysis": null,
+  "composition": {
+    "viewBox": "0 0 1000 750",
+    "layers": [
+      {
+        "id": "sky-gradient-background",
+        "name": "Sky Gradient",
+        "description": "The base gradient for the sky, transitioning from cool blue to warm orange at sunset.",
+        "paintingTip": "Apply a wet-on-wet technique for the sky. Start with a light wash of blue at the top, then gradually blend in warmer yellows and oranges as you move towards the horizon, ensuring smooth transitions.",
+        "elements": [
+          {
+            "type": "defs",
+            "content": "<linearGradient id=\"skyGradient\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:#70a0c0;stop-opacity:1\" /><stop offset=\"50%\" style=\"stop-color:#a0b0c0;stop-opacity:1\" /><stop offset=\"100%\" style=\"stop-color:#ffb060;stop-opacity:1\" /></linearGradient>"
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 0,
+              "y": 0,
+              "width": 1000,
+              "height": 500,
+              "fill": "url(#skyGradient)"
+            }
+          }
+        ]
+      },
+      {
+        "id": "clouds-sky",
+        "name": "Sky Clouds",
+        "description": "Soft, diffused clouds reflecting the sunset colors in the upper sky.",
+        "paintingTip": "For clouds, use a damp brush to lift some of the sky color, or apply a very diluted wash of a warm grey or light peach color with soft edges. Blend gently into the background sky.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 150 Q100 100 200 150 T400 180 T600 150 T800 100 T1000 120 V0 H0 Z",
+              "fill": "#d0c0b0",
+              "fillOpacity": 0.6
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 250 Q50 200 150 230 T300 260 T450 240 T600 270 T750 250 T900 280 T1000 260 V200 H0 Z",
+              "fill": "#e0d0c0",
+              "fillOpacity": 0.5
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 350 Q80 300 200 330 T400 360 T600 340 T800 370 T1000 350 V300 H0 Z",
+              "fill": "#f0e0d0",
+              "fillOpacity": 0.7
+            }
+          }
+        ]
+      },
+      {
+        "id": "distant-shoreline",
+        "name": "Distant Shoreline",
+        "description": "The silhouette of the distant land, including palm trees and structures, against the sunset.",
+        "paintingTip": "Use a darker, muted wash (e.g., a mix of burnt sienna and indigo) for the distant shoreline. Keep the shapes simplified and slightly blurred to convey distance. Allow it to dry before adding any light details.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 450 L0 470 C50 460 150 455 250 465 C350 475 450 460 550 470 C650 480 750 465 850 475 C950 485 1000 470 1000 470 L1000 450 Z",
+              "fill": "#806040"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M100 450 L110 420 L120 450 Z M200 450 L210 410 L220 450 Z M300 450 L315 400 L330 450 Z M400 450 L410 425 L420 450 Z M500 450 L510 415 L520 450 Z M600 450 L610 405 L620 450 Z M700 450 L710 420 L720 450 Z M800 450 L810 410 L820 450 Z M900 450 L910 400 L920 450 Z",
+              "fill": "#806040"
+            }
+          }
+        ]
+      },
+      {
+        "id": "main-building-base",
+        "name": "Main Building Base",
+        "description": "The primary structure of the power plant building, a large white/grey mass.",
+        "paintingTip": "For the building, use a light, cool grey wash for the main body. For areas catching the sunset light, add a touch of warm yellow or orange to the grey. Use masking fluid for sharp edges if desired.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 180,
+              "y": 400,
+              "width": 300,
+              "height": 100,
+              "fill": "#e0e0e0"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 200,
+              "y": 380,
+              "width": 250,
+              "height": 20,
+              "fill": "#d0d0d0"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 150,
+              "y": 420,
+              "width": 30,
+              "height": 80,
+              "fill": "#c0c0c0"
+            }
+          }
+        ]
+      },
+      {
+        "id": "chimney",
+        "name": "Chimney",
+        "description": "The tall, distinctive chimney of the power plant, with its striped top.",
+        "paintingTip": "Paint the chimney with a base wash of light grey. Once dry, carefully add the darker stripes using a slightly thicker, darker grey or brown paint. Use a steady hand for straight lines.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 250,
+              "y": 100,
+              "width": 50,
+              "height": 300,
+              "fill": "#c0c0c0"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 250,
+              "y": 100,
+              "width": 50,
+              "height": 20,
+              "fill": "#806060"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 250,
+              "y": 140,
+              "width": 50,
+              "height": 20,
+              "fill": "#806060"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 250,
+              "y": 180,
+              "width": 50,
+              "height": 20,
+              "fill": "#806060"
+            }
+          }
+        ]
+      },
+      {
+        "id": "shoreline-lights",
+        "name": "Shoreline Lights",
+        "description": "Bright, warm lights illuminating the shoreline and parts of the building.",
+        "paintingTip": "Apply a concentrated wash of bright yellow or orange for the lights. For a glowing effect, paint a slightly larger, very diluted wash of the same color around the light source, blending outwards.",
+        "elements": [
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 170,
+              "cy": 450,
+              "r": 8,
+              "fill": "#ffcc00"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 170,
+              "cy": 450,
+              "r": 15,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.3
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 300,
+              "cy": 460,
+              "r": 10,
+              "fill": "#ffcc00"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 300,
+              "cy": 460,
+              "r": 20,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.3
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 400,
+              "cy": 470,
+              "r": 12,
+              "fill": "#ffcc00"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 400,
+              "cy": 470,
+              "r": 25,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.3
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 500,
+              "cy": 465,
+              "r": 10,
+              "fill": "#ffcc00"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 500,
+              "cy": 465,
+              "r": 20,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.3
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 600,
+              "cy": 475,
+              "r": 8,
+              "fill": "#ffcc00"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 600,
+              "cy": 475,
+              "r": 15,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.3
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 700,
+              "cy": 460,
+              "r": 10,
+              "fill": "#ffcc00"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 700,
+              "cy": 460,
+              "r": 20,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.3
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 800,
+              "cy": 470,
+              "r": 12,
+              "fill": "#ffcc00"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 800,
+              "cy": 470,
+              "r": 25,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.3
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 900,
+              "cy": 465,
+              "r": 10,
+              "fill": "#ffcc00"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 900,
+              "cy": 465,
+              "r": 20,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.3
+            }
+          }
+        ]
+      },
+      {
+        "id": "water-reflection-base",
+        "name": "Water Reflection Base",
+        "description": "The base layer for the water, reflecting the sky's gradient and general light.",
+        "paintingTip": "For the water, mirror the sky's gradient but make it slightly darker and more muted. Use horizontal strokes to suggest the calm surface of the water. Allow colors to bleed slightly for a natural look.",
+        "elements": [
+          {
+            "type": "defs",
+            "content": "<linearGradient id=\"waterGradient\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:#507080;stop-opacity:1\" /><stop offset=\"50%\" style=\"stop-color:#708090;stop-opacity:1\" /><stop offset=\"100%\" style=\"stop-color:#b08040;stop-opacity:1\" /></linearGradient>"
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 0,
+              "y": 480,
+              "width": 1000,
+              "height": 270,
+              "fill": "url(#waterGradient)"
+            }
+          }
+        ]
+      },
+      {
+        "id": "water-reflection-clouds",
+        "name": "Water Reflection Clouds",
+        "description": "Reflections of the clouds in the water, slightly distorted.",
+        "paintingTip": "Paint the cloud reflections with a very diluted, slightly darker version of the sky cloud colors. Use horizontal, broken strokes to simulate the ripple effect on the water. Don't make them too distinct.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 550 Q100 580 200 550 T400 520 T600 550 T800 600 T1000 580 V750 H0 Z",
+              "fill": "#a09080",
+              "fillOpacity": 0.4
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 650 Q50 680 150 670 T300 640 T450 660 T600 630 T750 650 T900 620 T1000 640 V750 H0 Z",
+              "fill": "#b0a090",
+              "fillOpacity": 0.3
+            }
+          }
+        ]
+      },
+      {
+        "id": "water-reflection-building",
+        "name": "Water Reflection Building",
+        "description": "The reflection of the main building and chimney in the water.",
+        "paintingTip": "Paint the building reflection directly below the actual building, using slightly darker and more muted versions of the building colors. Use vertical strokes that are slightly broken or wavy to show the water's surface.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 250,
+              "y": 480,
+              "width": 50,
+              "height": 200,
+              "fill": "#808080",
+              "fillOpacity": 0.7
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 250,
+              "y": 480,
+              "width": 50,
+              "height": 10,
+              "fill": "#504040",
+              "fillOpacity": 0.7
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 250,
+              "y": 500,
+              "width": 50,
+              "height": 10,
+              "fill": "#504040",
+              "fillOpacity": 0.7
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 180,
+              "y": 500,
+              "width": 300,
+              "height": 80,
+              "fill": "#a0a0a0",
+              "fillOpacity": 0.6
+            }
+          }
+        ]
+      },
+      {
+        "id": "water-reflection-lights",
+        "name": "Water Reflection Lights",
+        "description": "The shimmering reflections of the shoreline lights on the water's surface.",
+        "paintingTip": "For light reflections, use short, horizontal dabs of bright yellow or orange paint. Vary the length and intensity to simulate the shimmering effect on water. You can also use a dry brush technique for a broken, sparkling look.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 160,
+              "y": 500,
+              "width": 20,
+              "height": 30,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.8
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 290,
+              "y": 510,
+              "width": 20,
+              "height": 40,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.8
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 390,
+              "y": 520,
+              "width": 20,
+              "height": 50,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.8
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 490,
+              "y": 515,
+              "width": 20,
+              "height": 40,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.8
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 590,
+              "y": 525,
+              "width": 20,
+              "height": 30,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.8
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 690,
+              "y": 510,
+              "width": 20,
+              "height": 40,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.8
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 790,
+              "y": 520,
+              "width": 20,
+              "height": 50,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.8
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 890,
+              "y": 515,
+              "width": 20,
+              "height": 40,
+              "fill": "#ffcc00",
+              "fillOpacity": 0.8
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "rawResponseLength": 14817,
+  "rawResponsePreview": "```json\n{\n  \"viewBox\": \"0 0 1000 750\",\n  \"layers\": [\n    {\n      \"id\": \"sky-gradient-background\",\n      \"name\": \"Sky Gradient\",\n      \"description\": \"The base gradient for the sky, transitioning from cool blue to warm orange at sunset.\",\n      \"paintingTip\": \"Apply a wet-on-wet technique for the sky. Start with a light wash of blue at the top, then gradually blend in warmer yellows and oranges as you move towards the horizon, ensuring smooth transitions.\",\n      \"elements\": [\n        {\n         ",
+  "valid": true
+}
