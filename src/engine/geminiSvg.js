@@ -186,105 +186,40 @@ async function callGemini(apiKey, model, parts, { maxTokens = 65536, systemInstr
   return text;
 }
 
-// ── Call 1: The Analyst ───────────────────────────────────────────
-// Produces a structured spatial analysis with bounding boxes,
-// perspective notes, and color layer plan. This becomes the
-// strict contract that Call 2 must follow.
+// ── Single-call natural prompt ────────────────────────────────────
+// Simple, conversational prompt that lets Gemini do what it does
+// best — analyze and recreate. We inject the authoritative palette
+// and aspect ratio, but keep everything else natural.
 
-function buildAnalystPrompt(metadata) {
+function buildPrompt(metadata) {
   const isPortrait = metadata.width < metadata.height;
   const ratio = metadata.width / metadata.height;
   const vbW = 1000;
   const vbH = Math.round(1000 / ratio);
 
   // Authoritative palette
-  let paletteStr = '';
+  let paletteNote = '';
   if (metadata.centroids?.length) {
     const hexList = metadata.centroids.map(c =>
       '#' + c.map(v => Math.round(v).toString(16).padStart(2, '0')).join('')
     );
-    paletteStr = `\nAUTHORITATIVE COLOR PALETTE (k-means from actual pixels — use ONLY these):
-${JSON.stringify(hexList)}`;
+    paletteNote = `\n\nI've already extracted the color palette from the image — please use ONLY these hex colors (you may darken or lighten them slightly): ${JSON.stringify(hexList)}`;
   }
 
-  // Pre-computed spatial anchors
-  const anchors = [];
-  if (metadata.hasHorizon && metadata.horizonY != null) {
-    const hPct = Math.round((metadata.horizonY / metadata.height) * 100);
-    anchors.push(`Horizon: Y=${Math.round(hPct / 100 * vbH)} (${hPct}% from top)`);
-  }
+  let sceneHints = '';
   if (metadata.hasReflection) {
-    anchors.push('Reflection: CONFIRMED — horizontal symmetry below horizon');
+    sceneHints += '\nNote: there appears to be a reflection in the water — please include the reflected elements.';
   }
-  if (metadata.regionBounds) {
-    const rb = metadata.regionBounds;
-    const toVB = (top, bot) => `Y=${Math.round(top / metadata.height * vbH)}-${Math.round(bot / metadata.height * vbH)}`;
-    if (rb.sky) anchors.push(`Sky zone: ${toVB(rb.sky.top, rb.sky.bot)}`);
-    if (rb.midground) anchors.push(`Midground: ${toVB(rb.midground.top, rb.midground.bot)}`);
-    if (rb.reflection && metadata.hasReflection) anchors.push(`Reflection zone: ${toVB(rb.reflection.top, rb.reflection.bot)}`);
-    if (rb.foreground) anchors.push(`Foreground: ${toVB(rb.foreground.top, rb.foreground.bot)}`);
-    if (rb.focalSubject) {
-      const fs = rb.focalSubject;
-      anchors.push(`Focal subject: X=${Math.round(fs.left / metadata.width * vbW)}, Y=${Math.round(fs.top / metadata.height * vbH)}, W=${Math.round((fs.right - fs.left) / metadata.width * vbW)}, H=${Math.round((fs.bot - fs.top) / metadata.height * vbH)}`);
-    }
-  }
-  const anchorBlock = anchors.length ? `\nPRE-COMPUTED SPATIAL DATA (ground truth from pixel analysis):\n${anchors.join('\n')}` : '';
 
-  return `Analyze this image for a vector painting tutorial. Image: ${metadata.width}x${metadata.height}px (${isPortrait ? 'portrait' : 'landscape'}).
-ViewBox: "0 0 ${vbW} ${vbH}"${paletteStr}${anchorBlock}
+  return `Hey, can you help me deconstruct this photo into a buildable image made of SVG layers for a painting tutorial app I'm working on?
 
-Output ONLY valid JSON matching this schema. No markdown fences.
+The image is ${metadata.width}x${metadata.height}px (${isPortrait ? 'portrait' : 'landscape'}). Please use viewBox="0 0 ${vbW} ${vbH}".${paletteNote}${sceneHints}
 
+Please first analyze the colors, perspective, and proportions in the image and then recreate a sort of approximation from shapes — like a simplified, stylized vector painting with 8-10 color layers ordered back to front.
+
+Output the result as JSON matching this schema (no markdown fences, no extra text after the JSON):
 {
   "viewBox": "0 0 ${vbW} ${vbH}",
-  "horizon_y": number,
-  "has_reflection": boolean,
-  "subjects": [
-    {
-      "name": "descriptive name",
-      "x": number, "y": number, "w": number, "h": number,
-      "angle": number,
-      "depth": "background | midground | foreground",
-      "notes": "perspective/foreshortening notes"
-    }
-  ],
-  "layers": [
-    { "name": "Layer Name", "hex": "#from_palette", "depth": "back | mid | front", "description": "what goes here" }
-  ]
-}
-
-RULES:
-- Identify 4-8 subjects with ACCURATE bounding boxes in viewBox coordinates.
-- Subjects must cover the FULL image — don't leave large empty zones unmapped.
-- If reflection exists, map both real AND reflected versions of subjects.
-- Plan 8-10 layers ordered back-to-front. Use ONLY palette hex codes.
-- Be precise with coordinates — these will be used as strict rendering constraints.`;
-}
-
-// ── Call 2: The Painter ──────────────────────────────────────────
-// Receives the Analyst's structured output as a strict contract
-// and must render SVG elements within the specified bounding boxes.
-
-const PAINTER_SYSTEM = `You are an SVG engineer creating a stylized vector painting for a tutorial app.
-
-STYLE: Bold, simplified geometric shapes — like a modern gouache painting or flat-vector editorial illustration. Abstracted but proportionally accurate.
-
-STRICT RULES:
-- You will receive a spatial analysis with subject bounding boxes. Your SVG elements MUST fall within these bounding boxes. Do not deviate from the specified coordinates.
-- Build each subject from 3-6 overlapping shapes with varying opacity (0.2-0.95).
-- ALL SVG attrs camelCase: strokeWidth, strokeDasharray, strokeLinecap.
-- All values COMPUTED NUMBERS (not expressions).
-- Use transform="rotate(angle cx cy)" for tilted elements.`;
-
-function buildPainterPrompt(analysis) {
-  return `Render this spatial analysis as layered SVG JSON. You MUST place elements within the bounding boxes specified below.
-
-SPATIAL ANALYSIS (STRICT — follow these coordinates exactly):
-${JSON.stringify(analysis, null, 2)}
-
-Output ONLY valid JSON. No markdown fences.
-{
-  "viewBox": "${analysis.viewBox}",
   "layers": [
     {
       "id": "layer-id",
@@ -298,21 +233,14 @@ Output ONLY valid JSON. No markdown fences.
   ]
 }
 
-RENDERING RULES:
-- Follow the layer plan from the analysis. Render layers back-to-front.
-- For EACH subject in the analysis, render 3-6 overlapping shapes WITHIN its bounding box.
-- Gradients: {"type":"defs","content":"<linearGradient id=\\"g1\\" ...><stop .../></linearGradient>"}
-- Background: large shapes, low opacity. Foreground: detailed shapes, high opacity.
-- ONLY use hex colors from the analysis palette. May darken (RGB x0.80) or lighten (RGB x1.15).
-- If has_reflection is true, render reflected copies of subjects below horizon_y with darkened colors and reduced opacity.`;
+For gradients use defs elements like: {"type":"defs","content":"<linearGradient id=\\"g1\\" ...><stop .../></linearGradient>"}
+Use camelCase for SVG attrs (strokeWidth, etc). All values must be computed numbers.`;
 }
 
 // ── Main Export ─────────────────────────────────────────────────────
 
 /**
- * Generate SVG composition via two-call Gemini pipeline.
- * Call 1 (Analyst): Spatial analysis with bounding boxes.
- * Call 2 (Painter): SVG rendering constrained by the analysis.
+ * Generate SVG composition via single natural-language Gemini call.
  */
 export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, options = {}) {
   if (!apiKey) throw new Error('Please enter your Gemini API key');
@@ -327,59 +255,32 @@ export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, opti
     if (cached) {
       const v = verifyComposition(cached, analysisMetadata);
       if (v.valid) {
-        const inv = cacheRead(`pw-inv-${hash}`);
-        return { composition: cached, warnings: v.warnings, inventory: inv };
+        return { composition: cached, warnings: v.warnings, inventory: null };
       }
     }
   }
 
-  // Resize image once for both calls
+  // Resize image
   onProgress({ step: 0, label: 'Preparing image...' });
   const imageBase64 = await resizeImageToBase64(imageSrc);
 
-  // Call 1: Analyst — spatial analysis with bounding boxes
-  onProgress({ step: 1, label: 'Analyzing composition & perspective...' });
-  let analysis = options.force ? null : cacheRead(`pw-inv-${hash}`);
-  if (!analysis) {
-    console.log('[PaintWise] Call 1 (Analyst): Spatial analysis...');
-    const analystPrompt = buildAnalystPrompt(analysisMetadata);
-    const text1 = await callGemini(apiKey, model, [
-      { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
-      { text: analystPrompt },
-    ], { maxTokens: 8192 });
+  // Single call with natural prompt
+  onProgress({ step: 1, label: 'Creating SVG composition...' });
+  console.log('[PaintWise] Generating SVG composition...');
 
-    analysis = extractJson(text1);
-    if (!analysis) {
-      console.error('[PaintWise] Analysis parse failed:', text1.slice(0, 1000));
-      throw new Error('Failed to parse spatial analysis from AI');
-    }
-    cacheWrite(`pw-inv-${hash}`, analysis);
+  const prompt = buildPrompt(analysisMetadata);
 
-    console.log('[PaintWise] Analysis:', {
-      viewBox: analysis.viewBox,
-      subjects: analysis.subjects?.length,
-      layers: analysis.layers?.length,
-      horizon: analysis.horizon_y,
-      reflection: analysis.has_reflection,
-    });
-  } else {
-    console.log('[PaintWise] Using cached analysis');
-  }
-
-  // Call 2: Painter — SVG rendering constrained by analysis
-  onProgress({ step: 2, label: 'Painting SVG composition...' });
-  console.log('[PaintWise] Call 2 (Painter): SVG rendering...');
-
-  const painterPrompt = buildPainterPrompt(analysis);
-  const text2 = await callGemini(apiKey, model, [
+  const text = await callGemini(apiKey, model, [
     { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
-    { text: painterPrompt },
-  ], { maxTokens: 65536, systemInstruction: PAINTER_SYSTEM });
+    { text: prompt },
+  ], { maxTokens: 65536 });
 
-  const composition = extractJson(text2);
+  onProgress({ step: 2, label: 'Parsing result...' });
+
+  const composition = extractJson(text);
   if (!composition) {
-    console.error('[PaintWise] SVG parse failed. First 500 chars:', text2.slice(0, 500));
-    console.error('[PaintWise] Last 200 chars:', text2.slice(-200));
+    console.error('[PaintWise] SVG parse failed. First 500 chars:', text.slice(0, 500));
+    console.error('[PaintWise] Last 200 chars:', text.slice(-200));
     throw new Error('Failed to parse SVG composition from AI');
   }
 
@@ -398,7 +299,7 @@ export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, opti
   }
 
   cacheWrite(`pw-comp-${hash}`, composition);
-  return { composition, warnings: verification.warnings, inventory: analysis };
+  return { composition, warnings: verification.warnings, inventory: null };
 }
 
 export function clearSvgCache() {
