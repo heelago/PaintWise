@@ -223,12 +223,44 @@ Follow this strict extraction protocol:
 
 Be EXHAUSTIVE and PRECISE. Measure every bounding box carefully. List every window, every bird, every wire, every sign. Use actual hex colors sampled from the image.`;
 
-async function analyzeScene(apiKey, imageBase64, model) {
+function buildDraftsmanContext(metadata) {
+  if (!metadata) return '';
+
+  const parts = ['\n\nALGORITHMIC PRE-ANALYSIS (use as reference, verify against what you see):'];
+
+  // Feed centroids as authoritative color palette
+  if (metadata.centroids?.length) {
+    parts.push('\nMEASURED COLOR PALETTE (sampled from actual pixels via k-means clustering — use these exact hex values in your palette):');
+    metadata.centroids.forEach((c, i) => {
+      const hex = '#' + c.map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+      parts.push(`  ${i + 1}. ${hex} — rgb(${c.join(', ')})`);
+    });
+  }
+
+  // Horizon hint
+  if (metadata.hasHorizon && metadata.horizonY != null) {
+    const pct = Math.round((metadata.horizonY / metadata.height) * 100);
+    parts.push(`\nHORIZON HINT: Our edge-detection found a strong horizontal contrast line at ~${pct}% from the top. Verify this matches what you see.`);
+  }
+
+  // Reflection hint — be permissive, ask Gemini to look carefully
+  parts.push(`\nREFLECTION CHECK: Look carefully for puddle reflections, water mirrors, or any symmetry across the horizon. Even partial reflections count. Our algorithm ${metadata.hasReflection ? 'DID detect' : 'did NOT detect'} a reflection — but verify with your own eyes. Inverted puddle reflections are common in urban photography.`);
+
+  // Image dimensions
+  parts.push(`\nIMAGE DIMENSIONS: ${metadata.width} x ${metadata.height} pixels (${metadata.width > metadata.height ? 'landscape' : 'portrait'})`);
+
+  return parts.join('\n');
+}
+
+async function analyzeScene(apiKey, imageBase64, model, metadata) {
   console.log('[PaintWise] Call 1 (Draftsman): Extracting structure...');
+
+  const context = buildDraftsmanContext(metadata);
+  const fullPrompt = DRAFTSMAN_PROMPT + context;
 
   const text = await callGemini(apiKey, model, [
     { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
-    { text: DRAFTSMAN_PROMPT },
+    { text: fullPrompt },
   ], 32768);
 
   const inventory = extractJson(text);
@@ -386,7 +418,7 @@ export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, opti
   onProgress({ step: 1, label: 'Analyzing your photo...' });
   let inventory = options.force ? null : cacheRead(`pw-inv-${hash}`);
   if (!inventory) {
-    inventory = await analyzeScene(apiKey, imageBase64, model);
+    inventory = await analyzeScene(apiKey, imageBase64, model, analysisMetadata);
     cacheWrite(`pw-inv-${hash}`, inventory);
   } else {
     console.log('[PaintWise] Using cached scene inventory');
