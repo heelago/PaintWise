@@ -1,0 +1,171 @@
+<svg width="100%" height="100%" viewBox="0 0 1000 750" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Sky Gradient: From cool blue at top to warm orange at horizon -->
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#89B5D8;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#B7D0E5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F7A661;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Water Gradient: Dark reflection of sky, with warm highlights near horizon -->
+    <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A3C42;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#6A585F;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#30282C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#201A1D;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Reflection Gradient for lights: Fading out -->
+    <linearGradient id="lightReflectionGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FCDA9C;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#FCDA9C;stop-opacity:0" />
+    </linearGradient>
+
+    <!-- Cloud filter for soft edges -->
+    <filter id="cloudBlur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="15" />
+    </filter>
+  </defs>
+
+  <!-- Layer 1: Sky Background -->
+  <g id="layer-sky-background">
+    <rect x="0" y="0" width="1000" height="450" fill="url(#skyGradient)" />
+  </g>
+
+  <!-- Layer 2: Clouds -->
+  <g id="layer-clouds">
+    <!-- Main, larger clouds -->
+    <ellipse cx="200" cy="150" rx="250" ry="80" fill="#E0CFC6" opacity="0.3" filter="url(#cloudBlur)" />
+    <ellipse cx="750" cy="200" rx="300" ry="100" fill="#E0CFC6" opacity="0.25" filter="url(#cloudBlur)" />
+    <rect x="50" y="300" width="900" height="80" rx="40" ry="40" fill="#A0928C" opacity="0.4" filter="url(#cloudBlur)" />
+    <!-- Smaller, more defined clouds -->
+    <rect x="100" y="250" width="180" height="50" rx="25" ry="25" fill="#D3C7C0" opacity="0.4" />
+    <rect x="700" y="270" width="250" height="60" rx="30" ry="30" fill="#D3C7C0" opacity="0.35" />
+    <rect x="400" y="350" width="400" height="70" rx="35" ry="35" fill="#A0928C" opacity="0.5" />
+  </g>
+
+  <!-- Layer 3: Distant Horizon / Land / Silhouettes -->
+  <g id="layer-distant-horizon">
+    <rect x="0" y="400" width="1000" height="50" fill="#2A2228" opacity="0.9" />
+    <!-- Distant structures and palm trees -->
+    <polygon points="850,400 860,370 870,400" fill="#2A2228" opacity="0.8" />
+    <polygon points="900,400 910,360 920,400" fill="#2A2228" opacity="0.8" />
+    <rect x="800" y="380" width="40" height="20" fill="#2A2228" opacity="0.8" />
+    <rect x="600" y="370" width="50" height="30" fill="#2A2228" opacity="0.8" />
+    <rect x="700" y="360" width="30" height="40" fill="#2A2228" opacity="0.8" />
+    <polygon points="500,400 510,350 520,400" fill="#2A2228" opacity="0.8" />
+    <!-- Power lines (very simplified) -->
+    <line x1="800" y1="380" x2="950" y2="370" stroke="#2A2228" stroke-width="2" opacity="0.7" />
+    <line x1="780" y1="390" x2="900" y2="385" stroke="#2A2228" stroke-width="2" opacity="0.7" />
+  </g>
+
+  <!-- Layer 4: Main Building and Chimney -->
+  <g id="layer-main-building">
+    <!-- Main building structures -->
+    <rect x="250" y="380" width="600" height="70" fill="#E4E5E0" />
+    <rect x="300" y="350" width="500" height="30" fill="#C8CAC5" />
+    <rect x="350" y="300" width="400" height="50" fill="#E4E5E0" />
+    <rect x="200" y="380" width="50" height="70" fill="#C8CAC5" />
+    <rect x="750" y="350" width="100" height="30" fill="#E4E5E0" />
+    <rect x="280" y="310" width="20" height="40" fill="#C8CAC5" />
+    <rect x="270" y="270" width="30" height="40" fill="#E4E5E0" />
+
+    <!-- Chimney -->
+    <rect x="360" y="100" width="80" height="250" fill="#907D78" /> <!-- Main lower section -->
+    <rect x="360" y="350" width="80" height="20" fill="#E4E5E0" /> <!-- Base band -->
+    <rect x="360" y="80" width="80" height="20" fill="#E4E5E0" /> <!-- Top band -->
+    <rect x="360" y="60" width="80" height="20" fill="#726A6F" /> <!-- Dark band below checker -->
+
+    <!-- Chimney checker pattern -->
+    <rect x="360" y="40" width="20" height="20" fill="#E4E5E0" />
+    <rect x="380" y="40" width="20" height="20" fill="#726A6F" />
+    <rect x="400" y="40" width="20" height="20" fill="#E4E5E0" />
+    <rect x="420" y="40" width="20" height="20" fill="#726A6F" />
+
+    <rect x="360" y="20" width="20" height="20" fill="#726A6F" />
+    <rect x="380" y="20" width="20" height="20" fill="#E4E5E0" />
+    <rect x="400" y="20" width="20" height="20" fill="#726A6F" />
+    <rect x="420" y="20" width="20" height="20" fill="#E4E5E0" />
+
+    <!-- Chimney top details (simple squares) -->
+    <rect x="365" y="0" width="10" height="20" fill="#C8CAC5" />
+    <rect x="395" y="0" width="10" height="20" fill="#C8CAC5" />
+    <rect x="425" y="0" width="10" height="20" fill="#C8CAC5" />
+
+    <!-- Small white building extensions/details -->
+    <rect x="480" y="320" width="100" height="30" fill="#E4E5E0" />
+    <rect x="520" y="280" width="60" height="40" fill="#E4E5E0" />
+    <rect x="650" y="310" width="80" height="40" fill="#E4E5E0" />
+  </g>
+
+  <!-- Layer 5: Foreground Shoreline and Lights -->
+  <g id="layer-foreground-shoreline-lights">
+    <rect x="0" y="450" width="1000" height="20" fill="#3B3037" opacity="1" />
+    <!-- Building lights -->
+    <circle cx="285" cy="300" r="8" fill="#F8D98C" opacity="0.9" />
+    <circle cx="285" cy="320" r="8" fill="#F8D98C" opacity="0.9" />
+    <circle cx="285" cy="340" r="8" fill="#F8D98C" opacity="0.9" />
+
+    <circle cx="485" cy="370" r="6" fill="#F8D98C" opacity="0.8" />
+    <circle cx="530" cy="370" r="6" fill="#F8D98C" opacity="0.8" />
+    <circle cx="580" cy="370" r="6" fill="#F8D98C" opacity="0.8" />
+    <circle cx="630" cy="370" r="6" fill="#F8D98C" opacity="0.8" />
+    <circle cx="680" cy="370" r="6" fill="#F8D98C" opacity="0.8" />
+    <circle cx="730" cy="370" r="6" fill="#F8D98C" opacity="0.8" />
+    <circle cx="780" cy="370" r="6" fill="#F8D98C" opacity="0.8" />
+    <circle cx="830" cy="370" r="6" fill="#F8D98C" opacity="0.8" />
+
+    <!-- Distant shore lights -->
+    <circle cx="880" cy="390" r="5" fill="#F8D98C" opacity="0.7" />
+    <circle cx="920" cy="385" r="5" fill="#F8D98C" opacity="0.7" />
+    <circle cx="950" cy="380" r="5" fill="#F8D98C" opacity="0.7" />
+    <circle cx="100" cy="420" r="5" fill="#F8D98C" opacity="0.7" />
+    <circle cx="150" cy="410" r="5" fill="#F8D98C" opacity="0.7" />
+  </g>
+
+  <!-- Layer 6: Water and Reflections -->
+  <g id="layer-water-reflections">
+    <rect x="0" y="470" width="1000" height="280" fill="url(#waterGradient)" />
+
+    <!-- Chimney reflection -->
+    <rect x="360" y="470" width="80" height="250" fill="#907D78" opacity="0.2" />
+    <rect x="360" y="720" width="80" height="20" fill="#E4E5E0" opacity="0.1" />
+    <rect x="360" y="450" width="80" height="20" fill="#E4E5E0" opacity="0.1" />
+    <rect x="360" y="430" width="80" height="20" fill="#726A6F" opacity="0.1" />
+
+    <!-- Main building reflections -->
+    <rect x="250" y="470" width="600" height="70" fill="#E4E5E0" opacity="0.15" />
+    <rect x="300" y="540" width="500" height="30" fill="#C8CAC5" opacity="0.1" />
+    <rect x="350" y="570" width="400" height="50" fill="#E4E5E0" opacity="0.1" />
+
+    <!-- Light reflections -->
+    <rect x="280" y="475" width="10" height="20" fill="url(#lightReflectionGradient)" />
+    <rect x="280" y="500" width="10" height="20" fill="url(#lightReflectionGradient)" />
+    <rect x="280" y="525" width="10" height="20" fill="url(#lightReflectionGradient)" />
+
+    <rect x="480" y="475" width="8" height="15" fill="url(#lightReflectionGradient)" opacity="0.8" />
+    <rect x="525" y="480" width="8" height="15" fill="url(#lightReflectionGradient)" opacity="0.8" />
+    <rect x="575" y="485" width="8" height="15" fill="url(#lightReflectionGradient)" opacity="0.8" />
+    <rect x="625" y="490" width="8" height="15" fill="url(#lightReflectionGradient)" opacity="0.8" />
+    <rect x="675" y="495" width="8" height="15" fill="url(#lightReflectionGradient)" opacity="0.8" />
+    <rect x="725" y="500" width="8" height="15" fill="url(#lightReflectionGradient)" opacity="0.8" />
+    <rect x="775" y="505" width="8" height="15" fill="url(#lightReflectionGradient)" opacity="0.8" />
+    <rect x="825" y="510" width="8" height="15" fill="url(#lightReflectionGradient)" opacity="0.8" />
+
+    <!-- Distant shore light reflections -->
+    <rect x="875" y="520" width="6" height="12" fill="url(#lightReflectionGradient)" opacity="0.7" />
+    <rect x="915" y="525" width="6" height="12" fill="url(#lightReflectionGradient)" opacity="0.7" />
+    <rect x="945" y="530" width="6" height="12" fill="url(#lightReflectionGradient)" opacity="0.7" />
+    <rect x="95" y="540" width="6" height="12" fill="url(#lightReflectionGradient)" opacity="0.7" />
+    <rect x="145" y="535" width="6" height="12" fill="url(#lightReflectionGradient)" opacity="0.7" />
+
+    <!-- Water ripples (subtle lines) -->
+    <line x1="0" y1="480" x2="1000" y2="480" stroke="#E7A55C" stroke-width="0.5" opacity="0.05" />
+    <line x1="0" y1="520" x2="1000" y2="520" stroke="#E7A55C" stroke-width="0.5" opacity="0.05" />
+    <line x1="0" y1="560" x2="1000" y2="560" stroke="#D3C7C0" stroke-width="0.5" opacity="0.03" />
+    <line x1="0" y1="600" x2="1000" y2="600" stroke="#D3C7C0" stroke-width="0.5" opacity="0.03" />
+    <line x1="0" y1="640" x2="1000" y2="640" stroke="#A0928C" stroke-width="0.5" opacity="0.02" />
+    <line x1="0" y1="680" x2="1000" y2="680" stroke="#A0928C" stroke-width="0.5" opacity="0.02" />
+    <line x1="0" y1="720" x2="1000" y2="720" stroke="#A0928C" stroke-width="0.5" opacity="0.01" />
+  </g>
+</svg>

@@ -15,7 +15,7 @@ const ENV = readFileSync('.env.local', 'utf-8');
 const API_KEY = ENV.match(/VITE_GEMINI_KEY=(.+)/)?.[1]?.trim();
 if (!API_KEY) { console.error('No VITE_GEMINI_KEY in .env.local'); process.exit(1); }
 
-const MODEL = 'gemini-2.5-flash';
+const MODEL = 'gemini-3-flash-preview';
 const IMAGE_PATH = process.argv.find((a, i) => process.argv[i - 1] === '--image') || 'public/reference-sunset.jpeg';
 const RESULTS_DIR = 'test-results';
 

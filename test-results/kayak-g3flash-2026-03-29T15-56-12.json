@@ -1,0 +1,230 @@
+{
+  "tag": "kayak-g3flash",
+  "mode": "single",
+  "timestamp": "2026-03-29T15-56-12",
+  "model": "gemini-3-flash-preview",
+  "image": "test-images/A16DFB1D-7500-4157-967B-E5CC55F96CFB_4_5005_c.jpeg",
+  "analysis": null,
+  "composition": {
+    "viewBox": "0 0 1000 1500",
+    "layers": [
+      {
+        "id": "water-base",
+        "name": "Deep Water Base",
+        "description": "The foundational deep blue-grey of the river water.",
+        "paintingTip": "Apply a broad wash of Indigo and Payne's Gray using a 2-inch flat brush. Keep the paper slightly damp to allow for soft edges in later layers.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 0,
+              "y": 0,
+              "width": 1000,
+              "height": 1500,
+              "fill": "#2c3e50"
+            }
+          }
+        ]
+      },
+      {
+        "id": "golden-reflection",
+        "name": "Sunset Sky Reflections",
+        "description": "Warm golden and orange tones reflected from the sky onto the water surface.",
+        "paintingTip": "Using a wet-on-wet technique, drop in Raw Sienna and Quinacridone Gold. Focus on the vertical shimmering column in the upper third.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M550,0 Q600,100 560,200 T580,400 T540,600 T570,800 L630,800 T600,600 T640,400 T610,200 T650,0 Z",
+              "fill": "#d39e5e",
+              "opacity": 0.6
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0,600 Q200,620 400,600 T800,630 T1000,600 L1000,800 Q800,820 500,800 T0,830 Z",
+              "fill": "#b37d4e",
+              "opacity": 0.4
+            }
+          }
+        ]
+      },
+      {
+        "id": "sky-blue-reflection",
+        "name": "Blue Sky Tones",
+        "description": "Lighter blue reflections that break up the dark water and warm tones.",
+        "paintingTip": "Use a round brush with Cerulean Blue. Use horizontal, slightly wavy strokes to mimic the surface tension of the water.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0,100 Q250,120 500,100 T1000,130 M0,300 Q250,320 500,300 T1000,330 M0,500 Q250,520 500,500 T1000,530",
+              "stroke": "#7fb3d5",
+              "strokeWidth": 40,
+              "fill": "none",
+              "opacity": 0.5
+            }
+          }
+        ]
+      },
+      {
+        "id": "wake-shadows",
+        "name": "Wake and Ripples",
+        "description": "Darker shadows created by the movement of the kayak and the paddle strokes.",
+        "paintingTip": "Switch to a smaller rigger brush with a concentrated mix of Neutral Tint. Paint the concentric circles and the V-shape trailing the boat.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M550,850 Q450,950 200,1100 M550,850 Q650,950 850,1100",
+              "stroke": "#1a252f",
+              "strokeWidth": 15,
+              "fill": "none"
+            }
+          },
+          {
+            "type": "ellipse",
+            "attrs": {
+              "cx": 300,
+              "cy": 1100,
+              "rx": 120,
+              "ry": 40,
+              "stroke": "#1a252f",
+              "strokeWidth": 8,
+              "fill": "none"
+            }
+          },
+          {
+            "type": "ellipse",
+            "attrs": {
+              "cx": 700,
+              "cy": 1250,
+              "rx": 150,
+              "ry": 50,
+              "stroke": "#1a252f",
+              "strokeWidth": 10,
+              "fill": "none"
+            }
+          }
+        ]
+      },
+      {
+        "id": "kayak-body",
+        "name": "The Red Kayak",
+        "description": "The main focal point: a bright red sea kayak.",
+        "paintingTip": "Use Cadmium Red Medium. Paint the sharp, elongated diamond shape. Leave a small sliver of white paper for the highlight on the left edge.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M610,650 L710,440 L690,440 L525,700 L545,880 L620,750 Z",
+              "fill": "#c0392b"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M525,700 L610,650 L620,750 L545,880 Z",
+              "fill": "#a93226"
+            }
+          }
+        ]
+      },
+      {
+        "id": "kayaker",
+        "name": "The Paddler",
+        "description": "The figure in the kayak, including the torso and the white sun hat.",
+        "paintingTip": "Use Titanium White for the hat and a mix of Alizarin Crimson for the life vest. Keep the shapes simple and gestural.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M580,580 Q610,550 640,580 L650,650 L570,650 Z",
+              "fill": "#e74c3c"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 605,
+              "cy": 540,
+              "r": 35,
+              "fill": "#ecf0f1"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M590,560 L620,560",
+              "stroke": "#bdc3c7",
+              "strokeWidth": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "paddle",
+        "name": "The Paddle",
+        "description": "The black double-bladed paddle stretched across the kayak.",
+        "paintingTip": "Use a thin liner brush with Ivory Black. Ensure the line is straight but the blades have a slight curve.",
+        "elements": [
+          {
+            "type": "line",
+            "attrs": {
+              "x1": 500,
+              "y1": 520,
+              "x2": 800,
+              "y2": 540,
+              "stroke": "#212121",
+              "strokeWidth": 8
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M500,520 L460,510 Q440,515 460,535 Z",
+              "fill": "#212121"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M800,540 L840,530 Q860,535 840,555 Z",
+              "fill": "#212121"
+            }
+          }
+        ]
+      },
+      {
+        "id": "water-highlights",
+        "name": "Surface Glints",
+        "description": "Sharp white and light blue highlights where the sun catches the tips of small ripples.",
+        "paintingTip": "Use dry brush technique with thick Chinese White or white gouache. Drag the brush quickly across the paper to catch only the texture peaks.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M50,1200 H150 M300,1350 H450 M700,1150 H850 M200,400 H350",
+              "stroke": "#ffffff",
+              "strokeWidth": 2,
+              "opacity": 0.7
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M540,920 Q550,930 560,920 M580,950 Q600,965 620,950",
+              "stroke": "#ffffff",
+              "strokeWidth": 3,
+              "fill": "none"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "rawResponseLength": 6544,
+  "rawResponsePreview": "{\n  \"viewBox\": \"0 0 1000 1500\",\n  \"layers\": [\n    {\n      \"id\": \"water-base\",\n      \"name\": \"Deep Water Base\",\n      \"description\": \"The foundational deep blue-grey of the river water.\",\n      \"paintingTip\": \"Apply a broad wash of Indigo and Payne's Gray using a 2-inch flat brush. Keep the paper slightly damp to allow for soft edges in later layers.\",\n      \"elements\": [\n        {\n          \"type\": \"rect\",\n          \"attrs\": {\n            \"x\": 0,\n            \"y\": 0,\n            \"width\": 1000,\n  ",
+  "valid": true
+}

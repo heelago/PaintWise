@@ -125,17 +125,23 @@ function extractJson(text) {
 
 // ── Gemini API caller (supports single-turn and multi-turn) ───────
 
-async function callGemini(apiKey, model, contents, { maxTokens = 65536 } = {}) {
+async function callGemini(apiKey, model, contents, { maxTokens = 65536, responseSchema = null } = {}) {
   // contents can be:
   //   - an array of parts (single turn): [{ text }, { inline_data }]
   //   - an array of messages (multi-turn): [{ role, parts }, ...]
   const isMultiTurn = contents[0]?.role != null;
+  const genConfig = {
+    temperature: 0.8,
+    maxOutputTokens: maxTokens,
+  };
+  // Structured output: force JSON response matching schema
+  if (responseSchema) {
+    genConfig.responseMimeType = 'application/json';
+    genConfig.responseSchema = responseSchema;
+  }
   const body = {
     contents: isMultiTurn ? contents : [{ parts: contents }],
-    generationConfig: {
-      temperature: 0.8,
-      maxOutputTokens: maxTokens,
-    },
+    generationConfig: genConfig,
   };
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -224,7 +230,7 @@ export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, opti
   if (!apiKey) throw new Error('Please enter your Gemini API key');
 
   const hash = fnv1aHash(imageSrc);
-  const model = options.model || 'gemini-2.5-flash';
+  const model = options.model || 'gemini-3-flash-preview';
   const onProgress = options.onProgress || (() => {});
 
   // Check composition cache
@@ -247,6 +253,7 @@ export async function generateGeminiSvg(apiKey, imageSrc, analysisMetadata, opti
   console.log('[PaintWise] Generating SVG composition...');
 
   const prompt = buildPrompt(analysisMetadata);
+
   const text = await callGemini(apiKey, model, [
     { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
     { text: prompt },

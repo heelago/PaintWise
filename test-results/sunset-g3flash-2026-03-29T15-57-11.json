@@ -1,0 +1,344 @@
+{
+  "tag": "sunset-g3flash",
+  "mode": "single",
+  "timestamp": "2026-03-29T15-57-11",
+  "model": "gemini-3-flash-preview",
+  "image": "public/reference-sunset.jpeg",
+  "analysis": null,
+  "composition": {
+    "viewBox": "0 0 1000 750",
+    "layers": [
+      {
+        "id": "sky-base",
+        "name": "Sky Gradient",
+        "description": "The foundation layer of the evening sky, fading from twilight blue to sunset orange.",
+        "paintingTip": "Perform a wet-on-wet wash using a 2-inch flat brush. Start with Cobalt Blue at the top, blending into a mixture of Naples Yellow and Cadmium Orange towards the horizon.",
+        "elements": [
+          {
+            "type": "defs",
+            "content": "<linearGradient id=\"skyGrad\" x1=\"0%\" y1=\"0%\" x2=\"0%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#5d7fa3\" /><stop offset=\"60%\" stop-color=\"#fbd185\" /><stop offset=\"100%\" stop-color=\"#f5b154\" /></linearGradient>"
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 0,
+              "y": 0,
+              "width": 1000,
+              "height": 480,
+              "fill": "url(#skyGrad)"
+            }
+          }
+        ]
+      },
+      {
+        "id": "clouds",
+        "name": "Soft Evening Clouds",
+        "description": "Wispy, low-hanging clouds catching the last light.",
+        "paintingTip": "Use a soft mop brush with a diluted mix of Payne's Gray and Alizarin Crimson. Dab gently while the sky is still slightly damp to achieve soft edges.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M50,150 Q150,120 250,160 T450,140 T650,180 T850,150 Q950,180 980,220 L1000,300 L0,300 Z",
+              "fill": "#9ca6b5",
+              "fillOpacity": 0.3
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M300,280 Q450,250 600,290 T850,270 Q950,300 980,350 L1000,400 L200,400 Z",
+              "fill": "#b89485",
+              "fillOpacity": 0.4
+            }
+          }
+        ]
+      },
+      {
+        "id": "buildings",
+        "name": "Power Station Structures",
+        "description": "The blocky, industrial forms of the power plant at the horizon.",
+        "paintingTip": "Mix Titanium White with a touch of Yellow Ochre and Neutral Tint. Use a size 8 flat brush for clean, geometric edges.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M340,480 L340,430 L370,430 L370,415 L430,415 L430,450 L560,450 L560,480 Z",
+              "fill": "#dcdde1"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 220,
+              "y": 460,
+              "width": 120,
+              "height": 20,
+              "fill": "#bfc1c9"
+            }
+          }
+        ]
+      },
+      {
+        "id": "chimney",
+        "name": "Main Chimney",
+        "description": "The iconic tall chimney stack with its distinctive markings.",
+        "paintingTip": "Use a rigger brush for the straight vertical lines. Add the red bands at the top with a tiny amount of Cadmium Red once the gray base is dry.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 308,
+              "y": 200,
+              "width": 24,
+              "height": 280,
+              "fill": "#c0c2ce"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 308,
+              "y": 200,
+              "width": 24,
+              "height": 10,
+              "fill": "#a53a3a"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 308,
+              "y": 220,
+              "width": 24,
+              "height": 10,
+              "fill": "#a53a3a"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 306,
+              "y": 415,
+              "width": 28,
+              "height": 65,
+              "fill": "#e8e9ed"
+            }
+          }
+        ]
+      },
+      {
+        "id": "shoreline",
+        "name": "Beach and Ground",
+        "description": "The dark, solid strip of land separating the sky from the water.",
+        "paintingTip": "Apply a thick, dark wash of Burnt Umber and Indigo. Use dry-brush strokes at the edge to suggest the rough texture of the wet sand.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 0,
+              "y": 480,
+              "width": 1000,
+              "height": 40,
+              "fill": "#4a413a"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0,520 Q250,510 500,520 T1000,510 L1000,525 L0,525 Z",
+              "fill": "#2d2824"
+            }
+          }
+        ]
+      },
+      {
+        "id": "water",
+        "name": "Reflective Water",
+        "description": "The calm sea surface reflecting the colors of the sunset.",
+        "paintingTip": "Use horizontal strokes with a large flat brush. Mix Indigo and Payne's Gray, leaving thin white lines to represent the shimmer of light on the water.",
+        "elements": [
+          {
+            "type": "defs",
+            "content": "<linearGradient id=\"waterGrad\" x1=\"0%\" y1=\"0%\" x2=\"0%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#4b5461\" /><stop offset=\"100%\" stop-color=\"#1a1c21\" /></linearGradient>"
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 0,
+              "y": 525,
+              "width": 1000,
+              "height": 225,
+              "fill": "url(#waterGrad)"
+            }
+          }
+        ]
+      },
+      {
+        "id": "reflections",
+        "name": "Building Reflections",
+        "description": "Vertical distortions of the buildings and chimney in the water.",
+        "paintingTip": "Pull damp vertical strokes downwards from the shoreline using the same colors as the buildings, but diluted. Keep the edges soft and slightly wavy.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M308,525 L332,525 L330,750 L306,750 Z",
+              "fill": "#3b424d",
+              "fillOpacity": 0.6
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M340,525 L560,525 L540,650 L360,650 Z",
+              "fill": "#5a6370",
+              "fillOpacity": 0.4
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0,525 L1000,525 L1000,600 L0,600 Z",
+              "fill": "#fbd185",
+              "fillOpacity": 0.2
+            }
+          }
+        ]
+      },
+      {
+        "id": "lights",
+        "name": "Industrial Lights",
+        "description": "Bright points of artificial light and their long vertical reflections.",
+        "paintingTip": "Use pure Titanium White or Zinc Yellow Gouache for the dots. For the reflections, use a liner brush to create thin, broken vertical lines below each light.",
+        "elements": [
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 320,
+              "arc": 5,
+              "cy": 430,
+              "r": 3,
+              "fill": "#ffffff"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 380,
+              "cy": 505,
+              "r": 4,
+              "fill": "#fff7d1"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 440,
+              "cy": 508,
+              "r": 3,
+              "fill": "#fff7d1"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 490,
+              "cy": 505,
+              "r": 3,
+              "fill": "#fff7d1"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 378,
+              "y": 525,
+              "width": 4,
+              "height": 80,
+              "fill": "#fce181",
+              "fillOpacity": 0.7
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 438,
+              "y": 525,
+              "width": 4,
+              "height": 60,
+              "fill": "#fce181",
+              "fillOpacity": 0.7
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 488,
+              "y": 525,
+              "width": 4,
+              "height": 50,
+              "fill": "#fce181",
+              "fillOpacity": 0.7
+            }
+          }
+        ]
+      },
+      {
+        "id": "silhouettes",
+        "name": "Palm Trees and Details",
+        "description": "Distant palm trees and shoreline structures in silhouette.",
+        "paintingTip": "Use Lamp Black and a size 0 detail brush. Keep the strokes quick and sharp to suggest the spiky fronds of the palm trees against the sunset glow.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M130,505 L130,480 M120,485 L140,485 M125,480 L135,490",
+              "stroke": "#212121",
+              "strokeWidth": 2
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M850,505 L850,470 M840,475 L860,475 M845,465 L855,485",
+              "stroke": "#212121",
+              "strokeWidth": 2
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M920,505 L920,460 M910,465 L930,465 M915,455 L925,475",
+              "stroke": "#212121",
+              "strokeWidth": 2
+            }
+          },
+          {
+            "type": "line",
+            "attrs": {
+              "x1": 750,
+              "y1": 505,
+              "x2": 750,
+              "y2": 420,
+              "stroke": "#212121",
+              "strokeWidth": 1
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M750,430 L850,460 M750,440 L850,470",
+              "stroke": "#212121",
+              "strokeWidth": 0.5,
+              "fill": "none"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "rawResponseLength": 8925,
+  "rawResponsePreview": "{\n  \"viewBox\": \"0 0 1000 750\",\n  \"layers\": [\n    {\n      \"id\": \"sky-base\",\n      \"name\": \"Sky Gradient\",\n      \"description\": \"The foundation layer of the evening sky, fading from twilight blue to sunset orange.\",\n      \"paintingTip\": \"Perform a wet-on-wet wash using a 2-inch flat brush. Start with Cobalt Blue at the top, blending into a mixture of Naples Yellow and Cadmium Orange towards the horizon.\",\n      \"elements\": [\n        {\n          \"type\": \"defs\",\n          \"content\": \"<linearGradient",
+  "valid": true
+}
