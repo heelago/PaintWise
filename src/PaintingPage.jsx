@@ -3,6 +3,7 @@ import { ROUND_CONFIGS, REGION_NAMES } from './engine/generateMarks';
 import { findNearestPigment, suggestMix } from './engine/pigments';
 import { generateInstructions } from './engine/instructions';
 import { buildSvgComposition } from './engine/svgBuilder';
+import { generateClaudeSvg } from './engine/claudeSvg';
 import SvgViewer from './SvgViewer';
 
 // ── Style constants (shared dark theme) ──────────────────────────
@@ -64,7 +65,13 @@ export default function PaintingPage({ imageData, image, onBack }) {
     ROUND_CONFIGS.map(() => true)
   );
   const [showPhoto, setShowPhoto] = useState(false);
-  const [viewStyle, setViewStyle] = useState('pointillist'); // 'pointillist' | 'svg'
+  const [viewStyle, setViewStyle] = useState('pointillist'); // 'pointillist' | 'svg' | 'ai-svg'
+
+  // AI SVG state
+  const [aiComposition, setAiComposition] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
+  const [aiWarnings, setAiWarnings] = useState([]);
 
   // Derived data (computed once when analysis is ready)
   const svgComposition = useMemo(() => {
@@ -83,6 +90,41 @@ export default function PaintingPage({ imageData, image, onBack }) {
     if (!analysis) return [];
     return generateInstructions(analysis, ROUND_CONFIGS);
   }, [analysis]);
+
+  // ── AI SVG generation ─────────────────────────────────────────
+  const triggerAiGeneration = useCallback(async (force = false) => {
+    if (aiLoading) return;
+    if (aiComposition && !force) return; // already have it
+    setAiLoading(true);
+    setAiError(null);
+    setAiWarnings([]);
+    try {
+      const metadata = {
+        width: imageData.width,
+        height: imageData.height,
+        centroids: analysis.centroids,
+        regionBounds: analysis.regionBounds,
+        horizonY: analysis.horizonY,
+        hasHorizon: analysis.hasHorizon,
+        hasReflection: analysis.hasReflection,
+        sceneAvgColor: analysis.sceneAvgColor,
+      };
+      const { composition, warnings } = await generateClaudeSvg(image.src, metadata);
+      setAiComposition(composition);
+      setAiWarnings(warnings || []);
+    } catch (err) {
+      setAiError(err.message || 'AI generation failed');
+    } finally {
+      setAiLoading(false);
+    }
+  }, [aiLoading, aiComposition, imageData, analysis, image]);
+
+  // Trigger AI generation when switching to ai-svg view
+  useEffect(() => {
+    if (viewStyle === 'ai-svg' && analysis && !aiComposition && !aiLoading && !aiError) {
+      triggerAiGeneration();
+    }
+  }, [viewStyle, analysis, aiComposition, aiLoading, aiError, triggerAiGeneration]);
 
   const canvasRef = useRef(null);
   const workerRef = useRef(null);
@@ -298,6 +340,11 @@ export default function PaintingPage({ imageData, image, onBack }) {
             onClick={() => setViewStyle('svg')}
             label="SVG Layers"
           />
+          <ControlButton
+            active={viewStyle === 'ai-svg'}
+            onClick={() => setViewStyle('ai-svg')}
+            label="AI Composition"
+          />
         </div>
       </div>
 
@@ -491,9 +538,54 @@ export default function PaintingPage({ imageData, image, onBack }) {
                 />
               </div>
             </>
-          ) : (
+          ) : viewStyle === 'svg' ? (
             svgComposition && <SvgViewer composition={svgComposition} />
-          )}
+          ) : viewStyle === 'ai-svg' ? (
+            aiLoading ? (
+              <div style={{ textAlign: 'center', padding: 60 }}>
+                <p style={{ fontFamily: BODY, fontSize: 20, color: TEXT, marginBottom: 12 }}>
+                  Studying your photo...
+                </p>
+                <p style={{ fontFamily: BODY, fontSize: 14, color: MUTED }}>
+                  Claude is analyzing the scene and building a composition
+                </p>
+                <div style={{
+                  width: 200, height: 4, borderRadius: 2, margin: '24px auto',
+                  background: 'rgba(198,154,92,0.15)', overflow: 'hidden',
+                }}>
+                  <div style={{
+                    width: '60%', height: '100%', borderRadius: 2,
+                    background: ACCENT,
+                    animation: 'pulse 1.5s ease-in-out infinite',
+                  }} />
+                </div>
+              </div>
+            ) : aiError ? (
+              <div style={{ textAlign: 'center', padding: 60 }}>
+                <p style={{ fontFamily: BODY, fontSize: 16, color: '#D45', marginBottom: 16 }}>
+                  {aiError}
+                </p>
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                  <ControlButton active={false} onClick={() => { setAiError(null); triggerAiGeneration(true); }} label="Retry" />
+                  <ControlButton active={false} onClick={() => setViewStyle('svg')} label="Use Algorithmic SVG" />
+                </div>
+              </div>
+            ) : aiComposition ? (
+              <div style={{ width: '100%' }}>
+                <SvgViewer composition={aiComposition} />
+                {aiWarnings.length > 0 && (
+                  <div style={{ margin: '12px 0', padding: '8px 12px', borderRadius: 6, background: 'rgba(212,170,68,0.1)', border: '1px solid rgba(212,170,68,0.2)' }}>
+                    {aiWarnings.map((w, i) => (
+                      <p key={i} style={{ fontFamily: BODY, fontSize: 12, color: 'rgba(212,170,68,0.7)', margin: '2px 0' }}>{w}</p>
+                    ))}
+                  </div>
+                )}
+                <div style={{ textAlign: 'center', marginTop: 12 }}>
+                  <ControlButton active={false} onClick={() => triggerAiGeneration(true)} label="Regenerate" />
+                </div>
+              </div>
+            ) : null
+          ) : null}
         </div>
       </div>
     </div>
