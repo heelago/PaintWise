@@ -185,32 +185,33 @@ async function callGemini(apiKey, model, contents, { maxTokens = 65536 } = {}) {
   return text;
 }
 
-// ── Single natural prompt ─────────────────────────────────────────
+// ── Prompt ────────────────────────────────────────────────────────
 
 function buildPrompt(metadata) {
-  const isPortrait = metadata.width < metadata.height;
   const ratio = metadata.width / metadata.height;
   const vbW = 1000;
   const vbH = Math.round(1000 / ratio);
 
-  let paletteNote = '';
-  if (metadata.centroids?.length) {
-    const hexList = metadata.centroids.map(c =>
-      '#' + c.map(v => Math.round(v).toString(16).padStart(2, '0')).join('')
-    );
-    paletteNote = `\n\nI've already extracted the color palette from the image pixels — please use these as your base colors: ${JSON.stringify(hexList)}`;
-  }
+  return `Hey buddy, can you help me deconstruct this photo into a buildable image made of svg layers of each color for a painting tutorial app im working on? please first analyze the colors, perspective, and proportions in the image and then recreate a sort of approximation from shapes. it should be recognizable, with as many details as you can recreate - but with simple svg shapes. Build it as 8-10 color layers ordered back to front.
 
-  let sceneHints = '';
-  if (metadata.hasReflection) {
-    sceneHints += '\nNote: there appears to be a reflection in the water.';
-  }
+Output the result as JSON matching this schema (no markdown fences, no extra text after the JSON):
+{
+  "viewBox": "0 0 ${vbW} ${vbH}",
+  "layers": [
+    {
+      "id": "layer-id",
+      "name": "Layer Name",
+      "description": "what this layer represents",
+      "paintingTip": "watercolor technique tip naming pigments and brush sizes",
+      "elements": [
+        { "type": "rect|path|circle|ellipse|line|defs", "attrs": { ... } }
+      ]
+    }
+  ]
+}
 
-  return `Hey buddy, can you help me deconstruct this photo into a buildable image made of SVG layers for a painting tutorial app I'm working on?
-
-The image is ${metadata.width}x${metadata.height}px (${isPortrait ? 'portrait' : 'landscape'}). Please use viewBox="0 0 ${vbW} ${vbH}".${paletteNote}${sceneHints}
-
-Please first analyze the colors, perspective, and proportions in the image and then recreate a sort of approximation from shapes — it should be recognizable, with as many details as you can recreate - but with simple svg shapes, maintaining proportions. Build it as 8-10 color layers ordered back to front.`;
+For gradients use: {"type":"defs","content":"<linearGradient id=\\"g1\\" .../>"}
+Use camelCase for SVG attrs (strokeWidth, etc). All values must be computed numbers.`;
 }
 
 // ── Main Export ─────────────────────────────────────────────────────

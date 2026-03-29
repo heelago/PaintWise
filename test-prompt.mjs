@@ -212,12 +212,7 @@ async function run() {
     const vbW = 1000;
     const vbH = Math.round(1000 / (imgW / imgH));
 
-    // The natural single-turn prompt (same as what's in the app)
-    const singlePrompt = `Hey buddy, can you help me deconstruct this photo into a buildable image made of SVG layers for a painting tutorial app I'm working on?
-
-The image is ${imgW}x${imgH}px (${isPortrait ? 'portrait' : 'landscape'}). Please use viewBox="0 0 ${vbW} ${vbH}".
-
-Please first analyze the colors, perspective, and proportions in the image and then recreate a sort of approximation from shapes — it should be recognizable, with as many details as you can recreate - but with simple svg shapes, maintaining proportions. Build it as 8-10 color layers ordered back to front.
+    const singlePrompt = `Hey buddy, can you help me deconstruct this photo into a buildable image made of svg layers of each color for a painting tutorial app im working on? please first analyze the colors, perspective, and proportions in the image and then recreate a sort of approximation from shapes. it should be recognizable, with as many details as you can recreate - but with simple svg shapes. Build it as 8-10 color layers ordered back to front.
 
 Output the result as JSON matching this schema (no markdown fences, no extra text after the JSON):
 {
@@ -235,7 +230,7 @@ Output the result as JSON matching this schema (no markdown fences, no extra tex
   ]
 }
 
-For gradients use: {"type":"defs","content":"<linearGradient id=\\"g1\\" ...><stop .../></linearGradient>"}
+For gradients use: {"type":"defs","content":"<linearGradient id=\\"g1\\" .../>"}
 Use camelCase for SVG attrs (strokeWidth, etc). All values must be computed numbers.`;
 
   if (mode === 'single') {
