@@ -185,14 +185,13 @@ async function callGemini(apiKey, model, contents, { maxTokens = 65536 } = {}) {
   return text;
 }
 
-// ── Conversational two-step prompt ────────────────────────────────
-// Step 1: Ask Gemini to analyze the image (colors, perspective,
-//         proportions) in a conversational way.
-// Step 2: In the SAME chat thread, ask it to build SVG from its
-//         own analysis. Multi-turn keeps the analysis in context.
+// ── Single natural prompt ─────────────────────────────────────────
 
-function buildStep1Prompt(metadata) {
+function buildPrompt(metadata) {
   const isPortrait = metadata.width < metadata.height;
+  const ratio = metadata.width / metadata.height;
+  const vbW = 1000;
+  const vbH = Math.round(1000 / ratio);
 
   let paletteNote = '';
   if (metadata.centroids?.length) {

@@ -1,0 +1,371 @@
+{
+  "tag": "DSC_2120",
+  "mode": "single",
+  "timestamp": "2026-03-29T14-48-15",
+  "model": "gemini-2.5-flash",
+  "image": "test-images/DSC_2120.jpg",
+  "analysis": null,
+  "composition": {
+    "viewBox": "0 0 1000 750",
+    "layers": [
+      {
+        "id": "background-wash",
+        "name": "Background Wash",
+        "description": "The soft, warm cream background that sets the overall tone.",
+        "paintingTip": "Start with a large flat brush and a very diluted wash of Naples Yellow and a touch of Raw Sienna, covering the entire paper for a warm, soft base.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 0,
+              "y": 0,
+              "width": 1000,
+              "height": 750,
+              "fill": "#f5eedd"
+            }
+          }
+        ]
+      },
+      {
+        "id": "deepest-blurs",
+        "name": "Deepest Crimson Blurs",
+        "description": "The most distant, highly blurred dark red shapes, barely visible.",
+        "paintingTip": "Using a large soft round brush, apply a very watery mix of Alizarin Crimson and a hint of Payne's Gray to create faint, blooming shapes at the bottom, letting them spread softly.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 750 C100 650 300 600 500 650 C700 700 900 680 1000 750 Z",
+              "fill": "rgba(100, 40, 40, 0.05)"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M100 750 C250 600 450 620 600 700 C750 780 900 720 1000 700 V750 Z",
+              "fill": "rgba(100, 40, 40, 0.07)"
+            }
+          }
+        ]
+      },
+      {
+        "id": "mid-ground-softness",
+        "name": "Mid-Ground Softness",
+        "description": "Slightly closer, still very blurry red forms that add depth.",
+        "paintingTip": "With a medium round brush, use a slightly stronger wash of Permanent Rose and a touch of Burnt Umber. Apply these gentle, blurred shapes, allowing them to merge with the background.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 750 L0 550 C150 500 350 520 500 580 C650 640 850 600 1000 650 L1000 750 Z",
+              "fill": "rgba(120, 30, 30, 0.1)"
+            }
+          },
+          {
+            "type": "ellipse",
+            "attrs": {
+              "cx": 200,
+              "cy": 600,
+              "rx": 150,
+              "ry": 80,
+              "fill": "rgba(130, 35, 35, 0.12)"
+            }
+          },
+          {
+            "type": "ellipse",
+            "attrs": {
+              "cx": 800,
+              "cy": 620,
+              "rx": 120,
+              "ry": 70,
+              "fill": "rgba(130, 35, 35, 0.1)"
+            }
+          }
+        ]
+      },
+      {
+        "id": "upper-blurred-buds",
+        "name": "Upper Blurred Buds",
+        "description": "The out-of-focus flower buds and petals in the upper part of the cluster, showing more distinct shapes.",
+        "paintingTip": "Using a slightly less diluted mix of Quinacridone Red and a hint of Sepia, paint the suggestion of upward-reaching, blurred petals and stems with the tip of your medium round brush.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M300 400 C320 350 380 350 400 400 C420 450 350 480 300 400 Z",
+              "fill": "rgba(150, 40, 40, 0.2)"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M550 450 C570 400 630 400 650 450 C670 500 600 530 550 450 Z",
+              "fill": "rgba(150, 40, 40, 0.2)"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M700 500 C720 450 780 450 800 500 C820 550 750 580 700 500 Z",
+              "fill": "rgba(150, 40, 40, 0.2)"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M100 550 C120 500 180 500 200 550 C220 600 150 630 100 550 Z",
+              "fill": "rgba(150, 40, 40, 0.2)"
+            }
+          }
+        ]
+      },
+      {
+        "id": "mid-level-petals",
+        "name": "Mid-Level Petals",
+        "description": "More defined, but still soft-edged petals and stems, showing the structure of the flower cluster.",
+        "paintingTip": "Use a mix of Perylene Maroon and a touch of Indigo with a smaller round brush. Paint the general shapes of petals and stems, keeping the edges soft to maintain the out-of-focus effect.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M250 600 C270 550 330 550 350 600 C370 650 300 680 250 600 Z",
+              "fill": "rgba(170, 45, 45, 0.3)"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M400 650 C420 600 480 600 500 650 C520 700 450 730 400 650 Z",
+              "fill": "rgba(170, 45, 45, 0.3)"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M600 680 C620 630 680 630 700 680 C720 730 650 760 600 680 Z",
+              "fill": "rgba(170, 45, 45, 0.3)"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M800 700 C820 650 880 650 900 700 C920 750 850 780 800 700 Z",
+              "fill": "rgba(170, 45, 45, 0.3)"
+            }
+          }
+        ]
+      },
+      {
+        "id": "foreground-dark-petals",
+        "name": "Foreground Dark Petals",
+        "description": "The darker, more defined petals and buds in the immediate foreground, still slightly blurred.",
+        "paintingTip": "Use a concentrated mix of Deep Red and a touch of Sepia. Paint the underlying shapes of the foreground petals, focusing on their curves and overlaps. Keep some edges soft for depth.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M300 750 C320 700 380 700 400 750 Z",
+              "fill": "rgba(150, 20, 20, 0.4)"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M500 750 C520 700 580 700 600 750 Z",
+              "fill": "rgba(150, 20, 20, 0.4)"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M650 750 C670 700 730 700 750 750 Z",
+              "fill": "rgba(150, 20, 20, 0.4)"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M150 750 C170 700 230 700 250 750 Z",
+              "fill": "rgba(150, 20, 20, 0.4)"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M400 680 C420 630 480 630 500 680 C520 730 450 760 400 680 Z",
+              "fill": "rgba(150, 20, 20, 0.4)"
+            }
+          }
+        ]
+      },
+      {
+        "id": "main-flower-petals",
+        "name": "Main Flower Petals",
+        "description": "The bright, sharp petals of the central, in-focus flower.",
+        "paintingTip": "Using a vibrant mix of Cadmium Red and a touch of Opera Pink, paint the distinct petal shapes of the main flower. Focus on sharp edges and the individual curves of each petal.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M490 700 C470 650 480 600 500 590 C520 600 530 650 510 700 Z",
+              "fill": "#d00000"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M510 700 C530 650 540 600 520 590 C500 600 490 650 510 700 Z",
+              "fill": "#d00000"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M500 590 C510 540 540 520 560 550 C580 580 550 600 500 590 Z",
+              "fill": "#d00000"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M560 550 C580 520 610 540 620 590 C630 640 600 660 560 550 Z",
+              "fill": "#d00000"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M620 590 C630 640 600 660 560 550 Z",
+              "fill": "#d00000"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M490 700 C470 730 440 740 420 720 C400 700 430 680 490 700 Z",
+              "fill": "#d00000"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M420 720 C400 700 430 680 490 700 Z",
+              "fill": "#d00000"
+            }
+          }
+        ]
+      },
+      {
+        "id": "flower-center-details",
+        "name": "Flower Center Details",
+        "description": "The light-colored stamens and pistils at the heart of the main flower.",
+        "paintingTip": "Using a very fine detail brush and a mix of Titanium White and a tiny touch of Yellow Ochre, carefully paint the delicate stamens and pistils. Add small dots for pollen.",
+        "elements": [
+          {
+            "type": "ellipse",
+            "attrs": {
+              "cx": 500,
+              "cy": 600,
+              "rx": 5,
+              "ry": 8,
+              "fill": "#fff8e7"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M500 600 L505 580 L500 575 L495 580 Z",
+              "fill": "#fff8e7"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M500 600 L500 570",
+              "stroke": "#fff8e7",
+              "strokeWidth": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "fine-hairs-and-highlights",
+        "name": "Fine Hairs and Highlights",
+        "description": "The delicate spiderwebs, fine hairs, and tiny highlights on the petals.",
+        "paintingTip": "With a rigger brush and pure Titanium White, add the finest details: tiny hairs on the petals, subtle highlights where light catches, and delicate spiderweb threads. Use a very light touch.",
+        "elements": [
+          {
+            "type": "line",
+            "attrs": {
+              "x1": 480,
+              "y1": 680,
+              "x2": 520,
+              "y2": 620,
+              "stroke": "rgba(255, 255, 255, 0.7)",
+              "strokeWidth": 0.5
+            }
+          },
+          {
+            "type": "line",
+            "attrs": {
+              "x1": 510,
+              "y1": 650,
+              "x2": 550,
+              "y2": 600,
+              "stroke": "rgba(255, 255, 255, 0.7)",
+              "strokeWidth": 0.5
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 495,
+              "cy": 690,
+              "r": 0.5,
+              "fill": "rgba(255, 255, 255, 0.8)"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 505,
+              "cy": 685,
+              "r": 0.5,
+              "fill": "rgba(255, 255, 255, 0.8)"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 520,
+              "cy": 670,
+              "r": 0.5,
+              "fill": "rgba(255, 255, 255, 0.8)"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 530,
+              "cy": 650,
+              "r": 0.5,
+              "fill": "rgba(255, 255, 255, 0.8)"
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 480,
+              "cy": 670,
+              "r": 0.5,
+              "fill": "rgba(255, 255, 255, 0.8)"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "rawResponseLength": 10967,
+  "rawResponsePreview": "```json\n{\n  \"viewBox\": \"0 0 1000 750\",\n  \"layers\": [\n    {\n      \"id\": \"background-wash\",\n      \"name\": \"Background Wash\",\n      \"description\": \"The soft, warm cream background that sets the overall tone.\",\n      \"paintingTip\": \"Start with a large flat brush and a very diluted wash of Naples Yellow and a touch of Raw Sienna, covering the entire paper for a warm, soft base.\",\n      \"elements\": [\n        {\n          \"type\": \"rect\",\n          \"attrs\": {\n            \"x\": 0,\n            \"y\": 0,\n     ",
+  "valid": true
+}

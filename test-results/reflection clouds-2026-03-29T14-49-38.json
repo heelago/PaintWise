@@ -1,0 +1,906 @@
+{
+  "tag": "reflection clouds",
+  "mode": "single",
+  "timestamp": "2026-03-29T14-49-38",
+  "model": "gemini-2.5-flash",
+  "image": "test-images/reflection clouds.jpg",
+  "analysis": null,
+  "composition": {
+    "viewBox": "0 0 1000 750",
+    "layers": [
+      {
+        "id": "sky-reflection-base",
+        "name": "Sky Reflection Base",
+        "description": "The base color for the sky, appearing at the very bottom of the image (which is the reflection of the sky).",
+        "paintingTip": "Start with a wash of Ultramarine Blue, diluted heavily with water, for the lightest areas of the sky. Use a large flat brush (e.g., 1 inch) to ensure an even, smooth application.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 0,
+              "y": 0,
+              "width": 1000,
+              "height": 750,
+              "fill": "#B0D4F5"
+            }
+          }
+        ]
+      },
+      {
+        "id": "sky-gradient",
+        "name": "Sky Gradient",
+        "description": "A subtle gradient for the sky, transitioning from a lighter blue at the bottom to a slightly darker, warmer tone towards the middle of the image.",
+        "paintingTip": "While the first wash is still damp, introduce a touch of Cerulean Blue mixed with a hint of Naples Yellow near the horizon line (middle of the canvas) to suggest depth and atmospheric perspective. Use a soft round brush (size 12).",
+        "elements": [
+          {
+            "type": "defs",
+            "content": "<linearGradient id=\"skyGradient\" x1=\"0%\" y1=\"100%\" x2=\"0%\" y2=\"0%\"><stop offset=\"0%\" stop-color=\"#B0D4F5\"/><stop offset=\"50%\" stop-color=\"#89BBE8\"/><stop offset=\"100%\" stop-color=\"#6C9DC8\"/></linearGradient>"
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 0,
+              "y": 0,
+              "width": 1000,
+              "height": 750,
+              "fill": "url(#skyGradient)"
+            }
+          }
+        ]
+      },
+      {
+        "id": "main-clouds-base",
+        "name": "Main Clouds Base",
+        "description": "The primary shapes and base color for the large, fluffy clouds.",
+        "paintingTip": "For the main body of the clouds, use a mix of Titanium White and a tiny touch of Raw Sienna to create an off-white, warm tone. Apply with a natural sponge or a dry-brush technique using a mop brush (size 16) to create soft, irregular edges.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 450 C50 400 150 420 200 380 C250 340 300 360 350 320 C400 280 450 300 500 260 C550 220 600 240 650 200 C700 160 750 180 800 140 C850 100 900 120 950 80 C1000 40 1000 0 1000 0 L0 0 Z",
+              "fill": "#E0E0E0"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 450 C50 400 150 420 200 380 C250 340 300 360 350 320 C400 280 450 300 500 260 C550 220 600 240 650 200 C700 160 750 180 800 140 C850 100 900 120 950 80 C1000 40 1000 0 1000 0 L1000 450 Z",
+              "fill": "#E0E0E0"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 450 C50 400 150 420 200 380 C250 340 300 360 350 320 C400 280 450 300 500 260 C550 220 600 240 650 200 C700 160 750 180 800 140 C850 100 900 120 950 80 C1000 40 1000 0 1000 0 L0 0 Z",
+              "fill": "#F0F0F0"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 450 C50 400 150 420 200 380 C250 340 300 360 350 320 C400 280 450 300 500 260 C550 220 600 240 650 200 C700 160 750 180 800 140 C850 100 900 120 950 80 C1000 40 1000 0 1000 0 L1000 450 Z",
+              "fill": "#F0F0F0"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 450 C50 400 150 420 200 380 C250 340 300 360 350 320 C400 280 450 300 500 260 C550 220 600 240 650 200 C700 160 750 180 800 140 C850 100 900 120 950 80 C1000 40 1000 0 1000 0 L0 0 Z",
+              "fill": "#F8F8F8"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 450 C50 400 150 420 200 380 C250 340 300 360 350 320 C400 280 450 300 500 260 C550 220 600 240 650 200 C700 160 750 180 800 140 C850 100 900 120 950 80 C1000 40 1000 0 1000 0 L1000 450 Z",
+              "fill": "#F8F8F8"
+            }
+          }
+        ]
+      },
+      {
+        "id": "clouds-highlights",
+        "name": "Clouds Highlights",
+        "description": "Warm, golden highlights on the clouds, suggesting light from a setting or rising sun.",
+        "paintingTip": "While the cloud base is still slightly damp, carefully dab in a mix of Cadmium Yellow Light and a touch of Quinacridone Gold for the sunlit edges. Use a small, soft round brush (size 6) for precision, allowing the colors to bleed softly.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 450 C50 400 150 420 200 380 C250 340 300 360 350 320 C400 280 450 300 500 260 C550 220 600 240 650 200 C700 160 750 180 800 140 C850 100 900 120 950 80 C1000 40 1000 0 1000 0 L0 0 Z",
+              "fill": "#FFD7A0",
+              "opacity": 0.7
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 450 C50 400 150 420 200 380 C250 340 300 360 350 320 C400 280 450 300 500 260 C550 220 600 240 650 200 C700 160 750 180 800 140 C850 100 900 120 950 80 C1000 40 1000 0 1000 0 L1000 450 Z",
+              "fill": "#FFD7A0",
+              "opacity": 0.7
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 450 C50 400 150 420 200 380 C250 340 300 360 350 320 C400 280 450 300 500 260 C550 220 600 240 650 200 C700 160 750 180 800 140 C850 100 900 120 950 80 C1000 40 1000 0 1000 0 L0 0 Z",
+              "fill": "#FFC080",
+              "opacity": 0.5
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 450 C50 400 150 420 200 380 C250 340 300 360 350 320 C400 280 450 300 500 260 C550 220 600 240 650 200 C700 160 750 180 800 140 C850 100 900 120 950 80 C1000 40 1000 0 1000 0 L1000 450 Z",
+              "fill": "#FFC080",
+              "opacity": 0.5
+            }
+          }
+        ]
+      },
+      {
+        "id": "building-base",
+        "name": "Building Base",
+        "description": "The main structure of the building, a light beige color.",
+        "paintingTip": "Mix Raw Sienna with a touch of Yellow Ochre and plenty of water for the building's base color. Apply with a flat brush (size 1/2 inch) using a steady hand to create clean, straight lines.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 200,
+              "y": 375,
+              "width": 600,
+              "height": 150,
+              "fill": "#D4C7B5"
+            }
+          }
+        ]
+      },
+      {
+        "id": "building-details-shadows",
+        "name": "Building Details and Shadows",
+        "description": "Windows, recesses, and shadowed areas of the building.",
+        "paintingTip": "For windows and shadowed areas, use a darker mix of Payne's Gray and Burnt Umber. Use a small, pointed round brush (size 4) for precise lines and shapes. Remember to keep the edges crisp for architectural details.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 220,
+              "y": 400,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 280,
+              "y": 400,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 340,
+              "y": 400,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 400,
+              "y": 400,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 460,
+              "y": 400,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 520,
+              "y": 400,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 580,
+              "y": 400,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 640,
+              "y": 400,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 700,
+              "y": 400,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 760,
+              "y": 400,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 220,
+              "y": 460,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 280,
+              "y": 460,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 340,
+              "y": 460,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 400,
+              "y": 460,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 460,
+              "y": 460,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 520,
+              "y": 460,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 580,
+              "y": 460,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 640,
+              "y": 460,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 700,
+              "y": 460,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 760,
+              "y": 460,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 480,
+              "y": 385,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 540,
+              "y": 385,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 600,
+              "y": 385,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 660,
+              "y": 385,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 720,
+              "y": 385,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 780,
+              "y": 385,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 480,
+              "y": 445,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 540,
+              "y": 445,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 600,
+              "y": 445,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 660,
+              "y": 445,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 720,
+              "y": 445,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 780,
+              "y": 445,
+              "width": 50,
+              "height": 30,
+              "fill": "#4A4A4A"
+            }
+          }
+        ]
+      },
+      {
+        "id": "pole",
+        "name": "Tall Pole",
+        "description": "The tall, thin pole with light fixtures to the left of the building.",
+        "paintingTip": "Use a mix of Ivory Black and a touch of Ultramarine Blue for the pole. Apply with a rigger brush (size 000) for extremely fine, straight lines. Ensure the paint is not too watery to maintain opacity.",
+        "elements": [
+          {
+            "type": "line",
+            "attrs": {
+              "x1": 170,
+              "y1": 150,
+              "x2": 170,
+              "y2": 525,
+              "stroke": "#333333",
+              "strokeWidth": 4
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M160 270 L170 270 L170 280 L160 280 Z",
+              "fill": "#333333"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M180 270 L170 270 L170 280 L180 280 Z",
+              "fill": "#333333"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M160 240 L170 240 L170 250 L160 250 Z",
+              "fill": "#333333"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M180 240 L170 240 L170 250 L180 250 Z",
+              "fill": "#333333"
+            }
+          }
+        ]
+      },
+      {
+        "id": "birds",
+        "name": "Birds",
+        "description": "Small, silhouetted birds flying in the sky.",
+        "paintingTip": "Use a very concentrated mix of Ivory Black for the birds. With a fine-tipped brush (size 00), create small, angular 'V' shapes or simple dots to suggest distant birds. Less is more for these small details.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M200 290 L205 285 L210 290 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M220 310 L225 305 L230 310 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M240 280 L245 275 L250 280 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M260 300 L265 295 L270 300 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M280 270 L285 265 L290 270 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M300 290 L305 285 L310 290 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M320 310 L325 305 L330 310 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M340 280 L345 275 L350 280 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M360 300 L365 295 L370 300 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M380 270 L385 265 L390 270 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M400 290 L405 285 L410 290 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M420 310 L425 305 L430 310 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M440 280 L445 275 L450 280 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M460 300 L465 295 L470 300 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M480 270 L485 265 L490 270 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M500 290 L505 285 L510 290 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M520 310 L525 305 L530 310 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M540 280 L545 275 L550 280 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M560 300 L565 295 L570 300 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M580 270 L585 265 L590 270 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M600 290 L605 285 L610 290 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M620 310 L625 305 L630 310 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M640 280 L645 275 L650 280 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M660 300 L665 295 L670 300 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M680 270 L685 265 L690 270 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M700 290 L705 285 L710 290 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M720 310 L725 305 L730 310 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M740 280 L745 275 L750 280 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M760 300 L765 295 L770 300 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M780 270 L785 265 L790 270 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M800 290 L805 285 L810 290 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M820 310 L825 305 L830 310 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M840 280 L845 275 L850 280 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M860 300 L865 295 L870 300 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M880 270 L885 265 L890 270 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M900 290 L905 285 L910 290 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M920 310 L925 305 L930 310 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M940 280 L945 275 L950 280 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M960 300 L965 295 L970 300 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M980 270 L985 265 L990 270 Z",
+              "fill": "#222222"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M1000 290 L1005 285 L1010 290 Z",
+              "fill": "#222222"
+            }
+          }
+        ]
+      },
+      {
+        "id": "ground-reflection-surface",
+        "name": "Ground/Reflection Surface",
+        "description": "The dark, wet ground or road surface that creates the reflection.",
+        "paintingTip": "For the wet ground, use a deep mix of Indigo and a touch of Sepia. Apply a thick, even wash with a large flat brush (2 inch) across the top half of the canvas. This creates the dark, reflective base.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 0,
+              "y": 0,
+              "width": 1000,
+              "height": 375,
+              "fill": "#2A3B4C"
+            }
+          }
+        ]
+      },
+      {
+        "id": "ground-reflection-details",
+        "name": "Ground Reflection Details",
+        "description": "Subtle reflections and patterns on the wet ground surface.",
+        "paintingTip": "While the ground layer is still damp, gently dab in very diluted Ultramarine Blue and a hint of the cloud highlight color (Cadmium Yellow Light) to suggest the reflected sky and clouds. Use a soft, damp brush (size 10) and blend carefully to create a blurred, watery effect.",
+        "elements": [
+          {
+            "type": "defs",
+            "content": "<linearGradient id=\"groundReflectGradient\" x1=\"0%\" y1=\"0%\" x2=\"0%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#4A6B8C\" stop-opacity=\"0.4\"/><stop offset=\"50%\" stop-color=\"#6C9DC8\" stop-opacity=\"0.2\"/><stop offset=\"100%\" stop-color=\"#2A3B4C\" stop-opacity=\"0.1\"/></linearGradient>"
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 0,
+              "y": 0,
+              "width": 1000,
+              "height": 375,
+              "fill": "url(#groundReflectGradient)"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 100 C100 80 200 120 300 100 C400 80 500 120 600 100 C700 80 800 120 900 100 C1000 80 1000 0 1000 0 L0 0 Z",
+              "fill": "#A0B0C0",
+              "opacity": 0.15
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 150 C100 130 200 170 300 150 C400 130 500 170 600 150 C700 130 800 170 900 150 C1000 130 1000 50 1000 50 L0 50 Z",
+              "fill": "#A0B0C0",
+              "opacity": 0.1
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 200 C100 180 200 220 300 200 C400 180 500 220 600 200 C700 180 800 220 900 200 C1000 180 1000 100 1000 100 L0 100 Z",
+              "fill": "#A0B0C0",
+              "opacity": 0.05
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 250 C100 230 200 270 300 250 C400 230 500 270 600 250 C700 230 800 270 900 250 C1000 230 1000 150 1000 150 L0 150 Z",
+              "fill": "#A0B0C0",
+              "opacity": 0.02
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "rawResponseLength": 24635,
+  "rawResponsePreview": "```json\n{\n  \"viewBox\": \"0 0 1000 750\",\n  \"layers\": [\n    {\n      \"id\": \"sky-reflection-base\",\n      \"name\": \"Sky Reflection Base\",\n      \"description\": \"The base color for the sky, appearing at the very bottom of the image (which is the reflection of the sky).\",\n      \"paintingTip\": \"Start with a wash of Ultramarine Blue, diluted heavily with water, for the lightest areas of the sky. Use a large flat brush (e.g., 1 inch) to ensure an even, smooth application.\",\n      \"elements\": [\n        {\n    ",
+  "valid": true
+}
