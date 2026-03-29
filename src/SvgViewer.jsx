@@ -46,6 +46,7 @@ function renderElement(el, index, outlineMode) {
     case 'line':    return <line key={key} {...attrs} />;
     case 'text':    return <text key={key} {...attrs}>{attrs.children || attrs.text || ''}</text>;
     case 'g':       return <g key={key} {...attrs}>{(el.children || []).map((c, ci) => renderElement(c, `${index}-${ci}`, outlineMode))}</g>;
+    case 'use':     return <use key={key} {...attrs} />;
     case 'defs':    return null; // handled separately
     default:        return null;
   }
