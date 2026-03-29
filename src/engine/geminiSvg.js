@@ -163,65 +163,72 @@ async function callGemini(apiKey, model, parts, maxTokens = 65536) {
   return text;
 }
 
-// ── Call 1: Scene Inventory ────────────────────────────────────────
+// ── Call 1: The "Draftsman" — Structural Analysis ─────────────────
+//
+// Precise Computer Vision extraction: geometric bounding boxes,
+// z-index layering, color palette, horizon, micro-details.
+// No artistic interpretation — just raw spatial and chromatic data.
 
-const INVENTORY_PROMPT = `You are a visual scene analyst. Study this photograph with extreme attention to detail and produce a complete inventory of everything visible.
+const DRAFTSMAN_PROMPT = `You are a precise Computer Vision API. Your task is to analyze the provided image and extract its geometric structure, Z-index layering, and core color palette into a structured JSON format.
 
-Return ONLY valid JSON. No markdown fences. No explanation. Just the JSON object.
+Do NOT generate code or artistic interpretation. Output ONLY valid JSON. No markdown fences.
+
+Follow this strict extraction protocol:
+
+1. **Aspect Ratio & Dimensions:** Is it portrait or landscape? What approximate ratio?
+2. **Horizon & Composition:** Identify the primary horizon line as a Y-axis percentage (0=top, 100=bottom). Describe what forms the horizon.
+3. **Reflection:** Is there a reflection? What type (puddle, lake, glass)? What is reflected?
+4. **Color Palette:** Extract 6-10 dominant colors. Return them as hex codes with traditional watercolor pigment names (e.g., "French Ultramarine", "Burnt Sienna", "Naples Yellow").
+5. **Z-Index Layer Mapping:** Break the image into 5-8 logical background-to-foreground layers. Each layer gets a descriptive name, z-index number, and a list of elements.
+6. **Geometric Bounding Boxes:** For EVERY architectural element, provide X, Y, Width, and Height as percentages (0-100). Be precise — measure carefully.
+7. **Micro-Details:** Identify tiny elements (birds, streetlamps, text/signage, wires, texture patches) with their approximate coordinates and descriptions.
 
 {
   "aspectRatio": "portrait" or "landscape",
-  "horizon": {
-    "present": true/false,
-    "yPercent": number (0=top edge, 100=bottom edge),
-    "description": "what forms the horizon line"
-  },
+  "horizon_y_percent": number,
+  "horizon_description": "what forms the horizon line",
   "reflection": {
-    "present": true/false,
+    "present": boolean,
     "type": "puddle" | "water" | "glass" | "none",
-    "description": "what is being reflected and how"
+    "axis_y_percent": number,
+    "description": "what is reflected and how"
   },
-  "zones": [
+  "palette": [
+    { "hex": "#hexvalue", "pigment": "traditional watercolor pigment name", "where": "where this color dominates" }
+  ],
+  "light": {
+    "direction": "description",
+    "warm_zone": "where warm light is strongest",
+    "cool_zone": "where cool shadows fall"
+  },
+  "layers": [
     {
-      "name": "descriptive zone name",
-      "yRange": [topPercent, bottomPercent],
-      "colors": ["#hex1", "#hex2"],
-      "description": "what's in this horizontal band"
+      "name": "Layer Name",
+      "z_index": 1,
+      "description": "what this layer contains",
+      "elements": [
+        {
+          "type": "gradient_box" | "building" | "window" | "cloud" | "pole" | "wire" | "bird" | "sign" | "texture" | "shadow" | "reflection_element",
+          "bounds": { "x": percent, "y": percent, "w": percent, "h": percent },
+          "color": "#hex or description",
+          "details": "specific visual details — shape, text, angles, material"
+        }
+      ]
     }
   ],
-  "elements": [
-    {
-      "type": "building" | "pole" | "wire" | "tree" | "cloud" | "bird" | "vehicle" | "sign" | "window" | "light" | "texture" | "other",
-      "position": {
-        "xPercent": number or [leftPercent, rightPercent],
-        "yPercent": number or [topPercent, bottomPercent]
-      },
-      "color": "#hex or description",
-      "shape": "rectangle" | "circle" | "line" | "irregular" | "triangle" | "v-shape",
-      "details": "specific visual description — windows, text, angles, etc."
-    }
-  ],
-  "colorPalette": [
-    { "hex": "#hexvalue", "name": "descriptive color name", "where": "where this color appears" }
-  ],
-  "lightSource": {
-    "direction": "description of light direction and quality",
-    "warmZone": "where warm light concentrates",
-    "coolZone": "where cool shadows fall"
-  },
-  "texture": [
-    { "where": "location description", "type": "concrete | asphalt | water | foliage | etc", "description": "visual quality" }
+  "textures": [
+    { "where": "location", "type": "concrete | asphalt | water-ripple | paper-grain", "bounds": { "x": 0, "y": 0, "w": 100, "h": 50 } }
   ]
 }
 
-Be EXHAUSTIVE. List every distinct element you can identify: every building with its windows, every pole, every wire, every bird, every cloud mass, every texture variation. Use percentage-based coordinates (0=left/top edge, 100=right/bottom edge). Sample actual hex colors from the image — don't guess.`;
+Be EXHAUSTIVE and PRECISE. Measure every bounding box carefully. List every window, every bird, every wire, every sign. Use actual hex colors sampled from the image.`;
 
 async function analyzeScene(apiKey, imageBase64, model) {
-  console.log('[PaintWise] Call 1: Analyzing scene...');
+  console.log('[PaintWise] Call 1 (Draftsman): Extracting structure...');
 
   const text = await callGemini(apiKey, model, [
     { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
-    { text: INVENTORY_PROMPT },
+    { text: DRAFTSMAN_PROMPT },
   ], 32768);
 
   const inventory = extractJson(text);
@@ -241,25 +248,28 @@ async function analyzeScene(apiKey, imageBase64, model) {
   return inventory;
 }
 
-// ── Call 2: SVG Construction ───────────────────────────────────────
+// ── Call 2: The "Painter" — Organic SVG Rendering ─────────────────
+//
+// Takes the rigid geometric data from the Draftsman and applies
+// watercolor physics: translucency, organic bezier shapes, dry brush
+// texture, reflection distortion, and intentional imperfection.
 
-function buildSvgPrompt(inventory) {
-  // Determine viewBox from aspect ratio
+function buildPainterPrompt(inventory) {
   let vbW = 800, vbH = 600;
   if (inventory.aspectRatio === 'portrait') {
     vbW = 533; vbH = 800;
   }
 
-  return `You are an SVG engineer specializing in watercolor painting composition. You have a detailed scene inventory and the original photograph. Convert the inventory into a layered SVG composition.
+  return `You are a Master Watercolorist and expert SVG engineer. I will provide you with a structured JSON map of an image's geometry and color palette extracted by computer vision.
 
-SCENE INVENTORY:
+Your task is to translate this rigid geometric data into a beautiful, ORGANIC SVG composition that looks like a watercolor painting study — not a transit map.
+
+STRUCTURAL DATA FROM DRAFTSMAN:
 ${JSON.stringify(inventory, null, 2)}
 
-VIEWBOX: ${vbW} x ${vbH} (use "0 0 ${vbW} ${vbH}")
+VIEWBOX: "0 0 ${vbW} ${vbH}"
 
-Convert all percentage positions to pixel coordinates:
-  x_pixel = xPercent / 100 * ${vbW}
-  y_pixel = yPercent / 100 * ${vbH}
+Convert percentage coordinates to pixels: x_px = percent/100 * ${vbW}, y_px = percent/100 * ${vbH}
 
 Return ONLY valid JSON. No markdown fences. No explanation.
 
@@ -270,7 +280,7 @@ Return ONLY valid JSON. No markdown fences. No explanation.
       "id": "kebab-case-id",
       "name": "Layer Name",
       "description": "what this layer contains",
-      "paintingTip": "beginner watercolor advice: brush type, technique, pigments",
+      "paintingTip": "beginner watercolor advice: brush, technique, pigments",
       "elements": [
         { "type": "rect|circle|ellipse|path|line|defs", "attrs": { camelCase SVG attributes } }
       ]
@@ -278,23 +288,44 @@ Return ONLY valid JSON. No markdown fences. No explanation.
   ]
 }
 
-RULES:
-1. Create 5-8 layers ordered back-to-front (sky washes first, fine details last).
-2. Include EVERY element from the inventory. Don't skip anything.
-3. For gradients: use a "defs" element with SVG gradient markup in its "content" field. Reference via url(#id).
-4. Colors: use the hex values from the inventory's colorPalette. Match them to elements by the "where" field.
-5. If reflection is present: reflect above-horizon elements below the horizon. Compress vertically by 0.85x. Darken colors ~20%.
-6. For textures (concrete, asphalt): use path elements with strokeDasharray for dry-brush effects.
-7. All SVG attrs must be camelCase: strokeWidth, strokeDasharray, fillOpacity, strokeLinecap.
-8. Buildings should have their windows, signs, and structural details as separate elements.
-9. Painting tips: mention specific brush (flat, round, rigger), technique (wet-on-wet, dry brush, lifting), and pigment names.
-10. Use the actual shapes from the inventory: rectangles for buildings, lines for poles/wires, v-shapes for birds, bezier paths for clouds.`;
+CRITICAL WATERCOLOR SVG TECHNIQUES — you MUST apply these:
+
+1. **FLUID TRANSLUCENCY:** NEVER use opacity 1.0 for background or midground fills. Use 0.3-0.85. Overlapping cloud and water layers should feel like wet pigment combining. Background washes at 0.3-0.5, midground at 0.5-0.7, foreground at 0.7-0.9.
+
+2. **ORGANIC SHAPES — NO RIGID RECTS for natural forms:** Convert cloud bounding boxes into SVG <path> elements using Cubic (C) and Smooth (S) Bezier curves. Clouds must have lumpy, irregular, billowing edges — NOT rectangles or perfect ellipses. For buildings, introduce a 1-2 pixel wobble to straight lines so they look hand-painted, not CAD-drawn.
+
+3. **DRY BRUSH TEXTURE:** For concrete, ground, asphalt, or rough surfaces, use thick <path> strokes with fill="none" and random-looking strokeDasharray patterns like "5, 15, 20, 10" or "8, 12, 3, 18". Use strokeWidth 30-60 and low opacity (0.2-0.4). This emulates cold-pressed paper catching dry pigment.
+
+4. **WATER REFLECTION DISTORTION:** If there's a reflection, the reflected elements must be:
+   - Vertically compressed by 0.85x
+   - Colors darkened ~15-20%
+   - Vertical edges given slight bezier wobble (water ripple)
+   - Slightly lower opacity than the real elements
+
+5. **GRADIENTS:** Put linearGradient/radialGradient SVG markup in a "defs" element's "content" field (as a raw SVG string). Reference via url(#gradientId) in fill attrs. Sky gradients should have 4-5 stops sampled from the palette.
+
+6. **SVG PATH SYNTAX FOR CLOUDS:** Use paths like:
+   "M50,200 C80,150 150,130 200,180 S300,220 350,190 C400,160 420,200 450,210 S500,250 520,200 L520,280 L50,280 Z"
+   NOT rectangles. The control points create the organic, billowing shape.
+
+7. **ALL ATTRS MUST BE camelCase:** strokeWidth, strokeDasharray, strokeLinecap, fillOpacity. NOT hyphenated.
+
+8. **INCLUDE EVERY ELEMENT** from the structural data. Every building, window, bird, pole, wire, sign, texture patch.
+
+9. **PAINTING TIPS** should name specific pigments (Burnt Sienna, French Ultramarine, Naples Yellow), brush types (size 12 flat, size 6 round, rigger), and techniques (wet-on-wet, dry brush, lifting, charging).
+
+10. **LAYER ORDER:** 5-8 layers, strictly back-to-front:
+    - Background sky gradient wash
+    - Cloud volumes (organic bezier paths, translucent)
+    - Architecture (buildings with wobble, windows as dark rects)
+    - Foreground details (poles, wires, birds)
+    - Texture overlays (dry brush dasharray paths)`;
 }
 
 async function generateSvgFromInventory(apiKey, imageBase64, inventory, model) {
-  console.log('[PaintWise] Call 2: Generating SVG from inventory...');
+  console.log('[PaintWise] Call 2 (Painter): Rendering organic SVG...');
 
-  const prompt = buildSvgPrompt(inventory);
+  const prompt = buildPainterPrompt(inventory);
 
   const text = await callGemini(apiKey, model, [
     { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },

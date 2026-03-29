@@ -108,8 +108,9 @@ export function verifyComposition(composition, analysisMetadata) {
             );
           }
           if (el.type === 'defs') {
-            if (typeof el.content !== 'string') {
-              errors.push(`Layer ${li}, element ${ei}: defs element must have "content" string`);
+            // Accept content string OR attrs — Gemini sometimes uses attrs for defs
+            if (typeof el.content !== 'string' && (!el.attrs || typeof el.attrs !== 'object')) {
+              warnings.push(`Layer ${li}, element ${ei}: defs element has neither "content" string nor "attrs"`);
             }
           } else {
             if (!el.attrs || typeof el.attrs !== 'object') {
