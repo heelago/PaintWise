@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 // ── Style constants (matching PaintingPage dark theme) ────────────
 const BG      = '#1E1C1A';
@@ -76,6 +76,33 @@ export default function SvgViewer({ composition }) {
   const [activeStep, setActiveStep] = useState(layerCount - 1);
   const [outlineMode, setOutlineMode] = useState(false);
   const [freeToggle, setFreeToggle] = useState(false);
+  const svgRef = useRef(null);
+
+  const saveAsImage = useCallback((format = 'png') => {
+    const svgEl = svgRef.current;
+    if (!svgEl) return;
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = () => {
+      const [, , w, h] = viewBox.split(' ').map(Number);
+      const scale = 2; // 2x for retina quality
+      const canvas = document.createElement('canvas');
+      canvas.width = w * scale;
+      canvas.height = h * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#F2EDE5'; // paper background
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const link = document.createElement('a');
+      link.download = `paintwise-composition.${format}`;
+      link.href = canvas.toDataURL(format === 'jpg' ? 'image/jpeg' : 'image/png', 0.95);
+      link.click();
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }, [viewBox]);
 
   // Reset state when layer count changes (new composition)
   useEffect(() => {
@@ -144,6 +171,7 @@ export default function SvgViewer({ composition }) {
         lineHeight: 0,
       }}>
         <svg
+          ref={svgRef}
           viewBox={viewBox}
           xmlns="http://www.w3.org/2000/svg"
           style={{ width: '100%', height: 'auto', display: 'block' }}
@@ -187,6 +215,9 @@ export default function SvgViewer({ composition }) {
             active={outlineMode}
             label={outlineMode ? 'Filled' : 'Outline'}
           />
+          <Spacer />
+          <CtrlBtn onClick={() => saveAsImage('png')} label="Save PNG" />
+          <CtrlBtn onClick={() => saveAsImage('jpg')} label="Save JPG" />
         </div>
 
         {/* Progress dots */}
