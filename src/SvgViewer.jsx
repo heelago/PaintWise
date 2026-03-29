@@ -31,6 +31,11 @@ function renderElement(el, index, outlineMode) {
     }
   }
 
+  // Handle style object (e.g., mixBlendMode)
+  if (attrs.style && typeof attrs.style === 'string') {
+    try { attrs.style = JSON.parse(attrs.style); } catch { delete attrs.style; }
+  }
+
   const key = `${el.type}-${index}`;
 
   switch (el.type) {
@@ -39,6 +44,8 @@ function renderElement(el, index, outlineMode) {
     case 'ellipse': return <ellipse key={key} {...attrs} />;
     case 'path':    return <path key={key} {...attrs} />;
     case 'line':    return <line key={key} {...attrs} />;
+    case 'text':    return <text key={key} {...attrs}>{attrs.children || attrs.text || ''}</text>;
+    case 'g':       return <g key={key} {...attrs}>{(el.children || []).map((c, ci) => renderElement(c, `${index}-${ci}`, outlineMode))}</g>;
     case 'defs':    return null; // handled separately
     default:        return null;
   }

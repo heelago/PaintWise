@@ -311,11 +311,11 @@ async function analyzeScene(apiKey, imageBase64, model, metadata) {
   return inventory;
 }
 
-// ── Call 2: The "Painter" — Organic SVG Rendering ─────────────────
+// ── Call 2: The "Painter" — Geometric SVG with Watercolor Layering ──
 //
-// Takes the rigid geometric data from the Draftsman and applies
-// watercolor physics: translucency, organic bezier shapes, dry brush
-// texture, reflection distortion, and intentional imperfection.
+// Clean geometric shapes + translucent layering = cubist watercolor study.
+// Architecture is CRISP rects. Clouds are bezier paths + circles.
+// Reflections are STRUCTURAL MIRRORS, not fuzzy copies.
 
 function buildPainterPrompt(inventory) {
   let vbW = 800, vbH = 600;
@@ -323,77 +323,96 @@ function buildPainterPrompt(inventory) {
     vbW = 533; vbH = 800;
   }
 
-  return `You are a Master Watercolorist and expert SVG engineer. Transform this structural analysis into an SVG that has DEPTH, ATMOSPHERE, and the ORGANIC IMPERFECTION of real watercolor — not flat design vectors.
+  // Calculate horizon in pixels
+  const hPercent = inventory.horizon_y_percent || 50;
+  const hY = Math.round(hPercent / 100 * vbH);
+
+  return `You are an SVG engineer creating a watercolor painting study guide. The style is GEOMETRIC and CLEAN — like a cubist interpretation of the scene. Watercolor softness comes from TRANSLUCENT LAYERING and OPACITY, not from blurred or wobbly edges.
 
 STRUCTURAL DATA:
 ${JSON.stringify(inventory, null, 2)}
 
 VIEWBOX: "0 0 ${vbW} ${vbH}"
+HORIZON Y: ${hY}px (${hPercent}% from top)
 Coords: x_px = percent/100 * ${vbW}, y_px = percent/100 * ${vbH}
 
-Return ONLY valid JSON. No markdown fences.
+Return ONLY valid JSON. No markdown fences. No explanation.
 { "viewBox": "0 0 ${vbW} ${vbH}", "layers": [{ "id": "string", "name": "string", "description": "string", "paintingTip": "string", "elements": [{ "type": "rect|path|circle|ellipse|line|defs", "attrs": {} }] }] }
 
-=== MANDATORY LAYERS (light → dark, like real watercolor) ===
+=== MANDATORY 7-LAYER STRUCTURE ===
 
-Layer 1: "Sky Wash" — Lightest wash. Full-width gradient rect. Use linearGradient in defs "content" field. Opacity 0.4-0.6.
+Layer 1: "Real Sky Wash"
+  A gradient rect covering ONLY the real sky zone (one side of the horizon).
+  Use a linearGradient with 3-4 stops from the palette in a defs element.
+  This is the brighter, cleaner sky.
 
-Layer 2: "Cloud Volumes" — ORGANIC bezier paths (C/S curves). Each cloud gets:
-  - A LIGHT path (the sunlit billowing top, warm color, opacity 0.5-0.7)
-  - A SHADOW path underneath (darker, cooler, opacity 0.3-0.5)
-  Top edge: lumpy billowing curves. Bottom edge: flatter. Example:
-  "M100,150 C120,100 180,80 220,120 S300,160 340,130 C380,100 400,130 420,140 L420,200 C300,210 200,195 100,200 Z"
-  NEVER rectangles or ellipses for clouds.
+Layer 2: "Reflected Sky Wash"
+  A SEPARATE gradient rect covering the reflected/puddle zone (other side of horizon).
+  Same hues as Layer 1 but ~15-20% darker (muddier, concrete-tinted).
+  TWO separate rects + TWO separate gradients — NOT one gradient spanning both.
 
-Layer 3: "Architecture" — Buildings with 3D VOLUME:
-  - Each building gets TWO overlapping shapes: a LIT FACE (warm, brighter) and a SHADOW FACE (cool, darker, slightly offset). This creates depth.
-  - Edges have 1-3px wobble (not perfectly straight — hand-painted feel).
-  - Windows: NEVER a perfect uniform grid. Vary width by 1-4px, vary spacing, skip some windows (glare), darken some (recessed). Group irregularly.
-  - Add shadow polygons UNDER overhangs and ledges (darker, translucent trapezoids).
-  - Opacity 0.65-0.9.
+Layer 3: "Cloud Volumes"
+  Three tonal layers of clouds in BOTH real and reflected zones:
+  a) SHADOW clouds: large <path> shapes, cool dark colors, opacity 0.5-0.7
+  b) MIDTONE clouds: <path> shapes, warm colors, opacity 0.7-0.9
+  c) HIGHLIGHT clouds: <circle> elements with near-white warm fill, opacity 0.8-0.9
+  Clouds use Bezier paths for organic edges:
+    "M-20,250 Q80,220 150,300 T300,320 T450,400 L-20,400 Z"
+  Reflected clouds: same shapes mirrored across horizon, darker colors, lower opacity.
 
-Layer 4: "Reflection" — CRITICAL if reflection exists in structural data:
-  MATH: horizon at h_y (from structural data). For each real element at y_real with height h:
-    reflected_h = h * 0.85 (vertical compression — perspective foreshortening)
-    reflected_y = h_y + (h_y - y_real - h) * 0.85 (mirror across horizon, compressed)
-  VISUAL:
-    - Colors: multiply RGB by 0.80 (water absorbs light)
-    - Edges: add 2-5px bezier wobble to ALL vertical lines (water ripple distortion)
-    - Opacity: 0.35-0.55 (lower than real elements — see-through to water)
-    - Reflected clouds: larger, softer, more diffuse shapes
-    - Reflected buildings: same wobbled edges + slight horizontal smear
-  If reflection.type is "puddle", the reflecting surface itself may have dark edges and grit texture.
+Layer 4: "Building Geometry"
+  THIS IS THE KEY LAYER. Follow this exact pattern:
+  a) First: ONE dark shadow <rect> spanning the entire building/horizon band.
+     Example: {"type":"rect","attrs":{"x":-10,"y":${hY - 100},"width":${vbW + 20},"height":200,"fill":"#4d4743"}}
+  b) Then: Individual building faces as CLEAN <rect> elements ON TOP of the shadow base.
+     Real buildings sit ON the horizon: y=${hY}, height extends downward.
+     Example: {"type":"rect","attrs":{"x":310,"y":${hY},"width":300,"height":120,"fill":"#ebaa78"}}
+  c) REFLECTED buildings sit ABOVE the horizon (for inverted puddle) or BELOW (for normal reflection):
+     reflected_height = real_height * 0.85
+     reflected_y = ${hY} - reflected_height
+     Darken the fill color by 15-20%.
+     Example: {"type":"rect","attrs":{"x":310,"y":${hY - 102},"width":300,"height":102,"fill":"#b88860","opacity":0.7}}
+  d) Windows: small dark <rect> elements at specific positions. NOT a uniform grid.
+     Some windows are wider, some narrower, some skipped (suggesting glare).
+  e) HORIZON LINE: a thin dark <rect> spanning the full width at the exact horizon:
+     {"type":"rect","attrs":{"x":0,"y":${hY - 2},"width":${vbW},"height":4,"fill":"#202b36","opacity":0.8}}
 
-Layer 5: "Ground Texture" — Dry brush effect. Use <path> with:
-  fill="none", stroke=dark_hex, strokeWidth=30-60, strokeDasharray="5,15,20,10"
-  2-4 sweeping curved paths. Opacity 0.15-0.3.
+Layer 5: "Surface Texture"
+  For concrete/puddle surfaces, use a combination of:
+  a) A dark <path> covering the puddle edge zone, opacity 0.5-0.7
+  b) 2-3 sweeping <path> strokes with fill="none", stroke=dark_color,
+     strokeWidth=40-60, strokeDasharray="5,15,20,10", opacity 0.2-0.4
+  c) 5-8 small <circle> elements (r=1-3) scattered in the texture zone for grit
 
-Layer 6: "Dark Details" — Darkest, most concentrated pigment (last in watercolor).
-  Poles: thin <rect> or <line>, width 2-4px. Slight lean or bend — not perfectly vertical.
-  Birds: <path> v-shapes with slight asymmetry. Each bird DIFFERENT size.
-  Wires: thin <line> elements, opacity 0.5-0.7.
-  Window recesses, signage, railings, cracks — all the scale_anchors from the data.
-  Opacity 0.75-0.95.
+Layer 6: "Fine Details"
+  Poles: thin <rect> elements, width=2-4px, perfectly straight (NOT wobbly).
+  Lamp fixtures: small geometric shapes (trapezoid <path>, small <rect> elements).
+  Both the real pole AND its reflection (same x, mirrored y, slightly darker).
+  Birds: small <path> v-shapes. Example: "M220,250 Q225,255 230,250 Q225,252 220,250 Z"
+  Both real birds AND reflected birds (inverted v-shapes on the other side of horizon).
 
-=== ATMOSPHERIC PERSPECTIVE (MANDATORY) ===
+Layer 7: "Signage & Text Details"
+  Any visible text, numbers, or markings on buildings.
+  Use <rect> elements sized to suggest text blocks (we cannot use <text> in this format).
 
-Background elements (distant sky, far clouds): LOW opacity (0.3-0.5), SOFT edges.
-Midground elements (buildings, main clouds): MEDIUM opacity (0.5-0.75).
-Foreground elements (texture, poles, birds): HIGH opacity (0.75-0.95), SHARP edges.
-This gradient of opacity creates the illusion of depth and atmosphere.
+=== CRITICAL: REFLECTION TECHNIQUE ===
 
-=== TECHNIQUE RULES ===
+If the structural data indicates a reflection, EVERY element that appears in the real scene MUST also appear in the reflected zone. The reflection is a STRUCTURAL MIRROR:
+- Same X positions and widths
+- Heights compressed by 0.85×
+- Y positions mirrored across horizon_y (${hY}px)
+- Colors darkened 15-20% (multiply each RGB channel by 0.80-0.85)
+- Opacity reduced by ~0.15 from the real element
+- NO blur, NO wobble, NO smearing — clean geometric mirroring
 
-GRADIENTS: Defs element with "content" string containing SVG gradient markup.
-  { "type": "defs", "content": "<linearGradient id=\\"sg\\" x1=\\"0\\" y1=\\"0\\" x2=\\"0\\" y2=\\"1\\"><stop offset=\\"0%\\" stop-color=\\"#82a0ba\\"/><stop offset=\\"100%\\" stop-color=\\"#d4a986\\"/></linearGradient>" }
+=== SVG TECHNIQUE ===
 
-ALL ATTRS camelCase: strokeWidth, strokeDasharray, strokeLinecap, fillOpacity.
+GRADIENTS: { "type": "defs", "content": "<linearGradient id=\\"skyGrad\\" x1=\\"0%\\" y1=\\"100%\\" x2=\\"0%\\" y2=\\"0%\\"><stop offset=\\"0%\\" stop-color=\\"#5d85a6\\"/><stop offset=\\"50%\\" stop-color=\\"#8ba5b8\\"/><stop offset=\\"85%\\" stop-color=\\"#e3bca5\\"/><stop offset=\\"100%\\" stop-color=\\"#d69c7a\\"/></linearGradient>" }
+Then reference: {"type":"rect","attrs":{"x":0,"y":${hY},"width":${vbW},"height":${vbH - hY},"fill":"url(#skyGrad)"}}
 
-COLORS: Use ONLY hex codes from the structural data palette. May darken (×0.7-0.9) or lighten (×1.1-1.3) for shadows/highlights.
-
-PAINTING TIPS: Name specific pigments, brush sizes (size 12 flat, size 6 round, rigger), techniques (wet-on-wet, wet-on-dry, dry brush, lifting, charging).
-
-NO FLAT DESIGN. Every shape should have variation, overlap, transparency. The SVG should look like a painting study, not an infographic.`;
+ALL ATTRS camelCase: strokeWidth, strokeDasharray, strokeLinecap.
+COLORS: ONLY from palette. May darken (×0.80) or lighten (×1.15) for reflected/highlight variants.
+PAINTING TIPS: Name pigments, brush sizes, techniques (wet-on-wet, dry brush, lifting).`;
 }
 
 async function generateSvgFromInventory(apiKey, imageBase64, inventory, model) {

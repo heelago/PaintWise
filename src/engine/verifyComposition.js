@@ -6,7 +6,7 @@
 // --- Helpers ---
 
 const VALID_ELEMENT_TYPES = new Set([
-  'rect', 'circle', 'ellipse', 'path', 'line', 'defs',
+  'rect', 'circle', 'ellipse', 'path', 'line', 'defs', 'text', 'g',
 ]);
 
 const VIEWBOX_PATTERN = /^0\s+0\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)$/;
