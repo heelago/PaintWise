@@ -16,13 +16,13 @@ const API_KEY = ENV.match(/VITE_GEMINI_KEY=(.+)/)?.[1]?.trim();
 if (!API_KEY) { console.error('No VITE_GEMINI_KEY in .env.local'); process.exit(1); }
 
 const MODEL = 'gemini-2.5-flash';
-const IMAGE_PATH = 'public/reference-sunset.jpeg';
+const IMAGE_PATH = process.argv.find((a, i) => process.argv[i - 1] === '--image') || 'public/reference-sunset.jpeg';
 const RESULTS_DIR = 'test-results';
 
 // ── Args ──
 const args = process.argv.slice(2);
 const tag = args.find((a, i) => args[i - 1] === '--tag') || 'test';
-const mode = args.includes('--convo') ? 'convo' : 'simple';
+const mode = args.includes('--convo') ? 'convo' : args.includes('--legacy') ? 'legacy' : 'single';
 
 // ── Helpers ──
 function imageToBase64(path) {
@@ -200,17 +200,57 @@ async function run() {
   const promptText = PROMPTS[promptKey] || PROMPTS.simple;
   if (!PROMPTS[promptKey]) console.log(`  ⚠ Unknown prompt "${promptKey}", using "simple"`);
 
-  if (mode === 'convo') {
-    // Conversational two-step: analyze first, then build in same thread
-    const vbH = 750; // 4:3 aspect
+  if (mode === 'single' || mode === 'convo') {
+    // Detect image dimensions
+    const sizeOf = (await import('image-size')).default;
+    let imgW = 1000, imgH = 750;
+    try {
+      const dims = sizeOf(IMAGE_PATH);
+      imgW = dims.width; imgH = dims.height;
+    } catch { /* fallback */ }
+    const isPortrait = imgH > imgW;
+    const vbW = 1000;
+    const vbH = Math.round(1000 / (imgW / imgH));
 
+    // The natural single-turn prompt (same as what's in the app)
+    const singlePrompt = `Hey buddy, can you help me deconstruct this photo into a buildable image made of SVG layers for a painting tutorial app I'm working on?
+
+The image is ${imgW}x${imgH}px (${isPortrait ? 'portrait' : 'landscape'}). Please use viewBox="0 0 ${vbW} ${vbH}".
+
+Please first analyze the colors, perspective, and proportions in the image and then recreate a sort of approximation from shapes — it should be recognizable, with as many details as you can recreate - but with simple svg shapes, maintaining proportions. Build it as 8-10 color layers ordered back to front.
+
+Output the result as JSON matching this schema (no markdown fences, no extra text after the JSON):
+{
+  "viewBox": "0 0 ${vbW} ${vbH}",
+  "layers": [
+    {
+      "id": "layer-id",
+      "name": "Layer Name",
+      "description": "what this layer represents",
+      "paintingTip": "watercolor technique tip naming pigments and brush sizes",
+      "elements": [
+        { "type": "rect|path|circle|ellipse|line|defs", "attrs": { ... } }
+      ]
+    }
+  ]
+}
+
+For gradients use: {"type":"defs","content":"<linearGradient id=\\"g1\\" ...><stop .../></linearGradient>"}
+Use camelCase for SVG attrs (strokeWidth, etc). All values must be computed numbers.`;
+
+  if (mode === 'single') {
+    console.log(`\n📤 Single call (natural prompt)...`);
+    const { text } = await callGemini([
+      { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
+      { text: singlePrompt },
+    ]);
+    rawText = text;
+    composition = extractJson(text);
+  } else {
+    // convo mode: step 1 analyze, step 2 build in same thread
     const step1 = `Hey buddy, can you help me deconstruct this photo for a painting tutorial app I'm working on?
 
-The image is 2000x1500px (landscape).
-
-I've already extracted the color palette — please use these as your base colors: ["#6b6359","#9b8d78","#3d3228","#503e2e","#1e160f","#c08a4e","#443c34","#786b5a","#595147","#876b48","#2e2720","#ab9874","#b0926e","#917e66"]
-
-Note: there appears to be a reflection in the water.
+The image is ${imgW}x${imgH}px (${isPortrait ? 'portrait' : 'landscape'}).
 
 Before we build anything, please first analyze the colors, perspective, and proportions in the image:
 1. Confirm or refine the color palette — 8-12 distinct colors from background to foreground with hex codes.
@@ -220,11 +260,11 @@ Before we build anything, please first analyze the colors, perspective, and prop
 
     const step2 = `Perfect, thank you! Now, based exactly on your analysis, can you recreate a buildable image made of SVG layers for each color?
 
-Please use viewBox="0 0 1000 ${vbH}" and recreate an approximation from shapes (ellipses, rects, paths, polygons). Make sure to strictly use the exact colors you extracted and rely heavily on your proportion and perspective analysis so the scale looks accurate!
+Please use viewBox="0 0 ${vbW} ${vbH}" and recreate an approximation from shapes (ellipses, rects, paths, polygons). Make sure to strictly use the exact colors you extracted and rely heavily on your proportion and perspective analysis so the scale looks accurate!
 
 Output ONLY valid JSON matching this schema (no markdown fences, no extra text after the JSON):
 {
-  "viewBox": "0 0 1000 ${vbH}",
+  "viewBox": "0 0 ${vbW} ${vbH}",
   "layers": [
     {
       "id": "layer-id",
@@ -260,16 +300,15 @@ Use camelCase for SVG attrs (strokeWidth, etc). All values must be computed numb
     ], { maxTokens: 65536 });
     rawText = svgText;
     composition = extractJson(svgText);
-  } else {
-    console.log(`\n📤 Single call (prompt: ${promptKey})...`);
+  }
+  } else if (mode === 'legacy') {
+    console.log(`\n📤 Single call (legacy prompt: ${promptKey})...`);
     const { text } = await callGemini([
       { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
       { text: promptText },
     ]);
     rawText = text;
-
-    const jsonStart = text.indexOf('{');
-    composition = extractJson(jsonStart >= 0 ? text.slice(jsonStart) : text);
+    composition = extractJson(text);
   }
 
   if (composition) {
@@ -296,7 +335,28 @@ Use camelCase for SVG attrs (strokeWidth, etc). All values must be computed numb
   };
 
   writeFileSync(resultFile, JSON.stringify(result, null, 2));
-  console.log(`\n💾 Saved: ${resultFile}`);
+  console.log(`\n💾 JSON: ${resultFile}`);
+
+  // Auto-render SVG
+  if (composition?.layers) {
+    const svgFile = resultFile.replace('.json', '.svg');
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${composition.viewBox}" width="800">`;
+    for (const layer of composition.layers) {
+      svg += `<g id="${layer.id}">`;
+      for (const el of layer.elements) {
+        if (el.type === 'defs') {
+          svg += `<defs>${el.content || ''}</defs>`;
+        } else {
+          const attrs = Object.entries(el.attrs || {}).map(([k,v]) => `${k}="${v}"`).join(' ');
+          svg += `<${el.type} ${attrs}/>`;
+        }
+      }
+      svg += '</g>';
+    }
+    svg += '</svg>';
+    writeFileSync(svgFile, svg);
+    console.log(`🖼  SVG: ${svgFile}`);
+  }
 }
 
 run().catch(e => { console.error('❌ Error:', e.message); process.exit(1); });

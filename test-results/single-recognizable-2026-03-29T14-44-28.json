@@ -1,0 +1,632 @@
+{
+  "tag": "single-recognizable",
+  "mode": "single",
+  "timestamp": "2026-03-29T14-44-28",
+  "model": "gemini-2.5-flash",
+  "image": "public/reference-sunset.jpeg",
+  "analysis": null,
+  "composition": {
+    "viewBox": "0 0 1000 750",
+    "layers": [
+      {
+        "id": "sky-gradient",
+        "name": "Sky Gradient",
+        "description": "The foundational gradient of the sky, transitioning from cool blue to warm orange at sunset.",
+        "paintingTip": "Start with a wet-on-wet wash using Cerulean Blue for the top, transitioning smoothly into Cadmium Yellow Light and a touch of Quinacridone Gold for the horizon. Use a large flat brush (e.g., 1-inch flat).",
+        "elements": [
+          {
+            "type": "defs",
+            "content": "<linearGradient id=\"skyGradient\" x1=\"0%\" y1=\"0%\" x2=\"0%\" y2=\"100%\"><stop offset=\"0%\" stopColor=\"#92B0C4\"/><stop offset=\"50%\" stopColor=\"#D0B0A0\"/><stop offset=\"100%\" stopColor=\"#F0C080\"/></linearGradient>"
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 0,
+              "y": 0,
+              "width": 1000,
+              "height": 550,
+              "fill": "url(#skyGradient)"
+            }
+          }
+        ]
+      },
+      {
+        "id": "water-base",
+        "name": "Water Base Color",
+        "description": "The base color of the water, reflecting the overall muted tones of the sky and environment.",
+        "paintingTip": "Apply a diluted wash of Neutral Tint mixed with a hint of Burnt Sienna for the water's base. Keep it light and even, using a large round brush (e.g., size 12).",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 0,
+              "y": 480,
+              "width": 1000,
+              "height": 270,
+              "fill": "#605040"
+            }
+          }
+        ]
+      },
+      {
+        "id": "clouds-upper",
+        "name": "Upper Clouds",
+        "description": "Soft, diffused cloud formations in the upper sky, catching the fading light.",
+        "paintingTip": "While the sky wash is still damp, gently dab in shapes with a very diluted mix of Raw Sienna and a touch of Payne's Gray using a soft mop brush (e.g., squirrel mop). Allow edges to blend softly.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 100 C100 50 200 80 250 120 C300 160 350 150 400 120 C450 90 500 100 550 130 C600 160 650 150 700 120 C750 90 800 100 850 130 C900 160 950 150 1000 120 L1000 0 L0 0 Z",
+              "fill": "#C0A090",
+              "opacity": 0.7
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 200 C80 170 180 190 250 220 C320 250 400 240 480 210 C560 180 640 190 720 220 C800 250 900 240 1000 210 L1000 150 L0 150 Z",
+              "fill": "#D0B0A0",
+              "opacity": 0.6
+            }
+          }
+        ]
+      },
+      {
+        "id": "clouds-lower",
+        "name": "Lower Horizon Clouds",
+        "description": "Clouds closer to the horizon, illuminated by the sunset's warm glow.",
+        "paintingTip": "For these warmer clouds, use a mix of Yellow Ochre and a touch of Light Red, applied with a smaller round brush (e.g., size 8) for more defined shapes, letting them blend into the sky gradient.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 350 C100 320 200 340 300 370 C400 400 500 390 600 360 C700 330 800 340 900 370 C950 385 1000 390 1000 390 L1000 300 L0 300 Z",
+              "fill": "#E0A060",
+              "opacity": 0.8
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M400 450 C500 420 600 440 700 470 C800 500 900 490 1000 460 L1000 400 L400 400 Z",
+              "fill": "#F0C080",
+              "opacity": 0.9
+            }
+          }
+        ]
+      },
+      {
+        "id": "shoreline-base",
+        "name": "Shoreline Base",
+        "description": "The foundational shape of the land separating the water from the main structures.",
+        "paintingTip": "Create a solid base for the shoreline using a mix of Burnt Umber and a touch of Indigo. Apply with a flat brush (e.g., 1/2-inch flat) for a clean edge against the water.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 0,
+              "y": 480,
+              "width": 1000,
+              "height": 50,
+              "fill": "#706050"
+            }
+          }
+        ]
+      },
+      {
+        "id": "main-building",
+        "name": "Main Building & Chimney",
+        "description": "The large power plant structure and its prominent chimney, a central feature of the scene.",
+        "paintingTip": "Use a mix of Titanium White and a tiny bit of Payne's Gray for the main building walls. For the chimney, use Sepia for the dark sections and a lighter mix for the white band. Use a rigger brush for the chimney details.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 180,
+              "y": 380,
+              "width": 350,
+              "height": 150,
+              "fill": "#E0E0E0"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 200,
+              "y": 200,
+              "width": 60,
+              "height": 280,
+              "fill": "#604040"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 200,
+              "y": 350,
+              "width": 60,
+              "height": 50,
+              "fill": "#E0E0E0"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 200,
+              "y": 200,
+              "width": 60,
+              "height": 30,
+              "fill": "#806060"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 200,
+              "y": 230,
+              "width": 30,
+              "height": 20,
+              "fill": "#C0C0C0"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 230,
+              "y": 200,
+              "width": 30,
+              "height": 20,
+              "fill": "#C0C0C0"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 200,
+              "y": 420,
+              "width": 30,
+              "height": 60,
+              "fill": "#E0E0E0"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 230,
+              "y": 420,
+              "width": 30,
+              "height": 60,
+              "fill": "#604040"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 200,
+              "y": 420,
+              "width": 60,
+              "height": 10,
+              "fill": "#604040"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 200,
+              "y": 450,
+              "width": 60,
+              "height": 10,
+              "fill": "#604040"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 200,
+              "y": 480,
+              "width": 60,
+              "height": 10,
+              "fill": "#604040"
+            }
+          }
+        ]
+      },
+      {
+        "id": "shoreline-elements",
+        "name": "Shoreline Elements",
+        "description": "Various structures and palm trees along the shoreline, silhouetted against the sunset.",
+        "paintingTip": "Use a dark, opaque mix of Indigo and Burnt Umber for the silhouettes. Apply with a small round brush (e.g., size 4) for precision. For palm trees, use a fine rigger brush for the fronds.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 500,
+              "y": 450,
+              "width": 400,
+              "height": 80,
+              "fill": "#504030"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M580 450 L570 420 L590 420 Z",
+              "fill": "#504030"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M650 450 L640 410 L660 410 Z",
+              "fill": "#504030"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M720 450 L710 400 L730 400 Z",
+              "fill": "#504030"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M800 450 L790 410 L810 410 Z",
+              "fill": "#504030"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M880 450 L870 420 L890 420 Z",
+              "fill": "#504030"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M400 450 C405 430 415 430 420 450 Z",
+              "fill": "#302010"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M410 430 C400 420 405 410 410 400 C415 410 420 420 410 430 Z",
+              "fill": "#302010"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M550 450 C555 430 565 430 570 450 Z",
+              "fill": "#302010"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M560 430 C550 420 555 410 560 400 C565 410 570 420 560 430 Z",
+              "fill": "#302010"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M680 450 C685 430 695 430 700 450 Z",
+              "fill": "#302010"
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M690 430 C680 420 685 410 690 400 C695 410 700 420 690 430 Z",
+              "fill": "#302010"
+            }
+          }
+        ]
+      },
+      {
+        "id": "water-reflections-sky-clouds",
+        "name": "Water Reflections (Sky & Clouds)",
+        "description": "The soft, diffused reflections of the sky and clouds on the water's surface.",
+        "paintingTip": "Using the same diluted colors as the sky and clouds, paint inverted shapes below the horizon. Allow them to be more blurry and less defined than their sky counterparts, using a soft, damp brush.",
+        "elements": [
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 750 C100 700 200 720 250 680 C300 640 350 650 400 680 C450 710 500 700 550 670 C600 640 650 650 700 680 C750 710 800 700 850 670 C900 640 950 650 1000 680 L1000 750 L0 750 Z",
+              "fill": "#D0B0A0",
+              "opacity": 0.4
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M0 650 C80 680 180 660 250 630 C320 600 400 610 480 640 C560 670 640 660 720 630 C800 600 900 610 1000 640 L1000 750 L0 750 Z",
+              "fill": "#E0A060",
+              "opacity": 0.5
+            }
+          }
+        ]
+      },
+      {
+        "id": "water-reflections-buildings",
+        "name": "Water Reflections (Buildings)",
+        "description": "The reflections of the main building and shoreline structures in the water.",
+        "paintingTip": "Paint the reflections directly below the structures, using slightly darker and more muted versions of the building colors. Use vertical strokes with a flat brush (e.g., 1/4-inch flat) to suggest the water's ripple.",
+        "elements": [
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 180,
+              "y": 530,
+              "width": 350,
+              "height": 150,
+              "fill": "#C0C0C0",
+              "opacity": 0.6
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 200,
+              "y": 530,
+              "width": 60,
+              "height": 200,
+              "fill": "#403030",
+              "opacity": 0.6
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 500,
+              "y": 530,
+              "width": 400,
+              "height": 80,
+              "fill": "#403020",
+              "opacity": 0.7
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M410 550 C400 560 405 570 410 580 C415 570 420 560 410 550 Z",
+              "fill": "#201000",
+              "opacity": 0.7
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M560 550 C550 560 555 570 560 580 C565 570 570 560 560 550 Z",
+              "fill": "#201000",
+              "opacity": 0.7
+            }
+          },
+          {
+            "type": "path",
+            "attrs": {
+              "d": "M690 550 C680 560 685 570 690 580 C695 570 700 560 690 550 Z",
+              "fill": "#201000",
+              "opacity": 0.7
+            }
+          }
+        ]
+      },
+      {
+        "id": "lights-and-reflections",
+        "name": "Lights and Reflections",
+        "description": "The bright, glowing lights on the shore and their shimmering reflections in the water.",
+        "paintingTip": "Use a vibrant Cadmium Yellow Deep or Indian Yellow for the lights. Apply with a small round brush (e.g., size 2) for the light sources. For reflections, use vertical dabs and short strokes with the same color, allowing them to blur slightly into the water base.",
+        "elements": [
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 225,
+              "cy": 465,
+              "r": 8,
+              "fill": "#FFD700"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 220,
+              "y": 540,
+              "width": 10,
+              "height": 40,
+              "fill": "#FFA500",
+              "opacity": 0.8
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 300,
+              "cy": 470,
+              "r": 5,
+              "fill": "#FFD700"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 298,
+              "y": 535,
+              "width": 4,
+              "height": 20,
+              "fill": "#FFA500",
+              "opacity": 0.7
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 350,
+              "cy": 475,
+              "r": 5,
+              "fill": "#FFD700"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 348,
+              "y": 530,
+              "width": 4,
+              "height": 25,
+              "fill": "#FFA500",
+              "opacity": 0.7
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 400,
+              "cy": 470,
+              "r": 5,
+              "fill": "#FFD700"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 398,
+              "y": 535,
+              "width": 4,
+              "height": 20,
+              "fill": "#FFA500",
+              "opacity": 0.7
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 500,
+              "cy": 470,
+              "r": 5,
+              "fill": "#FFD700"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 498,
+              "y": 535,
+              "width": 4,
+              "height": 20,
+              "fill": "#FFA500",
+              "opacity": 0.7
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 580,
+              "cy": 470,
+              "r": 5,
+              "fill": "#FFD700"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 578,
+              "y": 535,
+              "width": 4,
+              "height": 20,
+              "fill": "#FFA500",
+              "opacity": 0.7
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 650,
+              "cy": 470,
+              "r": 5,
+              "fill": "#FFD700"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 648,
+              "y": 535,
+              "width": 4,
+              "height": 20,
+              "fill": "#FFA500",
+              "opacity": 0.7
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 720,
+              "cy": 470,
+              "r": 5,
+              "fill": "#FFD700"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 718,
+              "y": 535,
+              "width": 4,
+              "height": 20,
+              "fill": "#FFA500",
+              "opacity": 0.7
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 800,
+              "cy": 470,
+              "r": 5,
+              "fill": "#FFD700"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 798,
+              "y": 535,
+              "width": 4,
+              "height": 20,
+              "fill": "#FFA500",
+              "opacity": 0.7
+            }
+          },
+          {
+            "type": "circle",
+            "attrs": {
+              "cx": 880,
+              "cy": 470,
+              "r": 5,
+              "fill": "#FFD700"
+            }
+          },
+          {
+            "type": "rect",
+            "attrs": {
+              "x": 878,
+              "y": 535,
+              "width": 4,
+              "height": 20,
+              "fill": "#FFA500",
+              "opacity": 0.7
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "rawResponseLength": 16948,
+  "rawResponsePreview": "```json\n{\n  \"viewBox\": \"0 0 1000 750\",\n  \"layers\": [\n    {\n      \"id\": \"sky-gradient\",\n      \"name\": \"Sky Gradient\",\n      \"description\": \"The foundational gradient of the sky, transitioning from cool blue to warm orange at sunset.\",\n      \"paintingTip\": \"Start with a wet-on-wet wash using Cerulean Blue for the top, transitioning smoothly into Cadmium Yellow Light and a touch of Quinacridone Gold for the horizon. Use a large flat brush (e.g., 1-inch flat).\",\n      \"elements\": [\n        {\n       ",
+  "valid": true
+}
